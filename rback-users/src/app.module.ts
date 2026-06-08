@@ -5,6 +5,8 @@ import { TenantsModule } from './modules/tenants/tenants.module';
 import { AuthModule } from './modules/auth/auth.module';
 import configService from './database/ormconfig.service';
 
+import { AcademicsModule } from './modules/academics/academics.module';
+
 @Module({
   imports: [
     // ── Global config — reads .env ──
@@ -19,6 +21,7 @@ import configService from './database/ormconfig.service';
     // ── Feature modules ──
     TenantsModule,
     AuthModule,
+    AcademicsModule,
   ],
 })
 export class AppModule {}

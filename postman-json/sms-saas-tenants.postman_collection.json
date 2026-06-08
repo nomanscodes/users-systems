@@ -1,8 +1,8 @@
 {
   "info": {
-    "name": "SMS SaaS — Tenants & Auth API",
+    "name": "user-system",
     "_postman_id": "sms-saas-tenants-v1",
-    "description": "Tenant and Auth module endpoints for the SaaS School Management System.\n\nBase URL: http://localhost:3000/api/v1\n\nPhase 0.1 — Tenant Module\n• POST /tenants/register — Public self-registration (no auth)\n• POST /tenants — Super Admin creates tenant\n• GET /tenants — List all tenants (Super Admin only)\n• GET /tenants/:id — Get tenant by ID (Super Admin only)\n• PATCH /tenants/:id — Update tenant details (Super Admin only)\n• PATCH /tenants/:id/status — Change tenant status (Super Admin only)\n\nPhase 0.2 — Auth Module\n• POST /auth/login — Login with email/password (Auto-sets tokens in Postman)\n• POST /auth/refresh — Refresh tokens\n• POST /auth/logout — Logout and revoke refresh token\n• GET /auth/me — Get current user profile",
+    "description": "Tenant and Auth module endpoints for the SaaS School Management System.\n\nBase URL: http://localhost:3000/api/v1\n\nPhase 0.1 — Tenant Module\n• POST /tenants/register — Public self-registration (no auth)\n• POST /tenants — Super Admin creates tenant\n• GET /tenants — List all tenants (Super Admin only)\n• GET /tenants/:id — Get tenant by ID (Super Admin only)\n• PATCH /tenants/:id — Update tenant details (Super Admin only)\n• PATCH /tenants/:id/status — Change tenant status (Super Admin only)\n\nPhase 0.2 — Auth Module\n• POST /auth/login — Login with email/password (Auto-sets tokens in Postman)\n• POST /auth/refresh — Refresh tokens\n• POST /auth/logout — Logout and revoke refresh token\n• GET /auth/me — Get current user profile\n\nPhase 0.3 — Academics\n• POST/GET /academics/branches\n• POST/GET /academics/sessions\n• POST/GET /academics/classes\n• POST/GET /academics/groups\n• POST/GET /academics/sections\n• POST/GET /academics/subjects\n• POST/GET /academics/batches",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -209,7 +209,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
               {
                 "key": "Authorization",
                 "value": "Bearer {{ACCESS_TOKEN}}"
@@ -241,10 +244,28 @@
             "url": {
               "raw": "{{BASE_URL}}/tenants?page=1&limit=20",
               "query": [
-                { "key": "page", "value": "1", "description": "Page number (default: 1)" },
-                { "key": "limit", "value": "20", "description": "Items per page (default: 20)" },
-                { "key": "search", "value": "", "description": "Search by name, email or slug", "disabled": true },
-                { "key": "status", "value": "ACTIVE", "description": "Filter by status: TRIAL | ACTIVE | SUSPENDED", "disabled": true }
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Items per page (default: 20)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by name, email or slug",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "description": "Filter by status: TRIAL | ACTIVE | SUSPENDED",
+                  "disabled": true
+                }
               ]
             },
             "description": "Returns a paginated list of all tenants.\n\nOptional query filters:\n• `search` — searches name, email, and slug\n• `status` — TRIAL | ACTIVE | SUSPENDED\n• `page` — default 1\n• `limit` — default 20"
@@ -269,7 +290,10 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
               {
                 "key": "Authorization",
                 "value": "Bearer {{ACCESS_TOKEN}}"
@@ -293,7 +317,10 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
               {
                 "key": "Authorization",
                 "value": "Bearer {{ACCESS_TOKEN}}"
@@ -311,6 +338,364 @@
             },
             "description": "Change the lifecycle status of a tenant.\n\nValid status values:\n• TRIAL — newly registered, limited access\n• ACTIVE — fully activated\n• SUSPENDED — access blocked"
           }
+        }
+      ]
+    },
+    {
+      "name": "Phase 0.3 - Academics",
+      "description": "Tenant-scoped endpoints to set up the Academic Organization Structure. Requires School Admin / Tenant Auth.",
+      "item": [
+        {
+          "name": "Branches",
+          "item": [
+            {
+              "name": "Create Branch",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ACCESS_TOKEN}}"
+                  }
+                ],
+                "url": "{{BASE_URL}}/academics/branches",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Main Campus\",\n  \"address\": \"123 Campus Drive\",\n  \"contactNumber\": \"+8801700000001\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get Branches",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ACCESS_TOKEN}}"
+                  }
+                ],
+                "url": "{{BASE_URL}}/academics/branches"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sessions",
+          "item": [
+            {
+              "name": "Create Session",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ACCESS_TOKEN}}"
+                  }
+                ],
+                "url": "{{BASE_URL}}/academics/sessions",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"2026-2027\",\n  \"startDate\": \"2026-01-01\",\n  \"endDate\": \"2026-12-31\",\n  \"isCurrent\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get Sessions",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ACCESS_TOKEN}}"
+                  }
+                ],
+                "url": "{{BASE_URL}}/academics/sessions"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Classes",
+          "item": [
+            {
+              "name": "Create Class",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ACCESS_TOKEN}}"
+                  }
+                ],
+                "url": "{{BASE_URL}}/academics/classes",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Class 10\",\n  \"numericValue\": 10\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get Classes",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ACCESS_TOKEN}}"
+                  }
+                ],
+                "url": "{{BASE_URL}}/academics/classes"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Groups",
+          "item": [
+            {
+              "name": "Create Group",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ACCESS_TOKEN}}"
+                  }
+                ],
+                "url": "{{BASE_URL}}/academics/groups",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Science\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get Groups",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ACCESS_TOKEN}}"
+                  }
+                ],
+                "url": "{{BASE_URL}}/academics/groups"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sections",
+          "item": [
+            {
+              "name": "Create Section",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ACCESS_TOKEN}}"
+                  }
+                ],
+                "url": "{{BASE_URL}}/academics/sections",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Section A\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get Sections",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ACCESS_TOKEN}}"
+                  }
+                ],
+                "url": "{{BASE_URL}}/academics/sections"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Subjects",
+          "item": [
+            {
+              "name": "Create Subject",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ACCESS_TOKEN}}"
+                  }
+                ],
+                "url": "{{BASE_URL}}/academics/subjects",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Physics\",\n  \"code\": \"PHY-101\",\n  \"type\": \"MANDATORY\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get Subjects",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ACCESS_TOKEN}}"
+                  }
+                ],
+                "url": "{{BASE_URL}}/academics/subjects"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Batches",
+          "item": [
+            {
+              "name": "Create Batch",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ACCESS_TOKEN}}"
+                  }
+                ],
+                "url": "{{BASE_URL}}/academics/batches",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"branchId\": \"<UUID_HERE>\",\n  \"sessionId\": \"<UUID_HERE>\",\n  \"classId\": \"<UUID_HERE>\",\n  \"groupId\": \"<UUID_HERE>\",\n  \"sectionId\": \"<UUID_HERE>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get Batches",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ACCESS_TOKEN}}"
+                  }
+                ],
+                "url": "{{BASE_URL}}/academics/batches"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Subject Allocations",
+          "item": [
+            {
+              "name": "Create Subject Allocation",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ACCESS_TOKEN}}"
+                  }
+                ],
+                "url": "{{BASE_URL}}/academics/subject-allocations",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"classId\": \"<UUID_HERE>\",\n  \"groupId\": \"<UUID_HERE_OR_OMIT>\",\n  \"subjectId\": \"<UUID_HERE>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Get Subject Allocations",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ACCESS_TOKEN}}"
+                  }
+                ],
+                "url": "{{BASE_URL}}/academics/subject-allocations"
+              }
+            }
+          ]
         }
       ]
     }
