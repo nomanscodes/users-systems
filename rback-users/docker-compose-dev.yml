@@ -1,0 +1,26 @@
+# docker compose -f docker-compose-dev.yml up -d
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: noman_test
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:3306"
+    volumes:
+      - noman_test_data:/var/lib/mysql
+    networks:
+      - noman_test
+
+volumes:
+  noman_test_data:
+    driver: local
+
+networks:
+  noman_test:
+    driver: bridge

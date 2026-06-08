@@ -1,0 +1,318 @@
+{
+  "info": {
+    "name": "SMS SaaS — Tenants & Auth API",
+    "_postman_id": "sms-saas-tenants-v1",
+    "description": "Tenant and Auth module endpoints for the SaaS School Management System.\n\nBase URL: http://localhost:3000/api/v1\n\nPhase 0.1 — Tenant Module\n• POST /tenants/register — Public self-registration (no auth)\n• POST /tenants — Super Admin creates tenant\n• GET /tenants — List all tenants (Super Admin only)\n• GET /tenants/:id — Get tenant by ID (Super Admin only)\n• PATCH /tenants/:id — Update tenant details (Super Admin only)\n• PATCH /tenants/:id/status — Change tenant status (Super Admin only)\n\nPhase 0.2 — Auth Module\n• POST /auth/login — Login with email/password (Auto-sets tokens in Postman)\n• POST /auth/refresh — Refresh tokens\n• POST /auth/logout — Logout and revoke refresh token\n• GET /auth/me — Get current user profile",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "TENANT_ID",
+      "value": "",
+      "type": "string",
+      "description": "Set this after creating a tenant"
+    },
+    {
+      "key": "ACCESS_TOKEN",
+      "value": "",
+      "type": "string",
+      "description": "Automatically set after login"
+    },
+    {
+      "key": "REFRESH_TOKEN",
+      "value": "",
+      "type": "string",
+      "description": "Automatically set after login"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "Phase 0.2 Authentication endpoints",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.success && jsonData.data) {",
+                  "    pm.collectionVariables.set(\"ACCESS_TOKEN\", jsonData.data.accessToken);",
+                  "    pm.collectionVariables.set(\"REFRESH_TOKEN\", jsonData.data.refreshToken);",
+                  "    console.log(\"Tokens updated successfully in collection variables\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{BASE_URL}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@greenvalley.edu\",\n  \"password\": \"Admin@1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Authenticates a user and returns an access and refresh token. A post-response script automatically saves these tokens to Postman collection variables to be used in subsequent requests."
+          }
+        },
+        {
+          "name": "Get Current Profile (Me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              }
+            ],
+            "url": "{{BASE_URL}}/auth/me",
+            "description": "Returns the profile of the currently authenticated user based on their JWT."
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.success && jsonData.data) {",
+                  "    pm.collectionVariables.set(\"ACCESS_TOKEN\", jsonData.data.accessToken);",
+                  "    pm.collectionVariables.set(\"REFRESH_TOKEN\", jsonData.data.refreshToken);",
+                  "    console.log(\"Tokens refreshed successfully\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{BASE_URL}}/auth/refresh",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{REFRESH_TOKEN}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Exchanges a valid refresh token for a new access token and refresh token pair. Automatically updates the collection variables."
+          }
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.collectionVariables.unset(\"ACCESS_TOKEN\");",
+                  "    pm.collectionVariables.unset(\"REFRESH_TOKEN\");",
+                  "    console.log(\"Tokens cleared from collection variables\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              }
+            ],
+            "url": "{{BASE_URL}}/auth/logout",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{REFRESH_TOKEN}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Revokes the refresh token in the database. Post-response script clears the tokens from Postman."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public Tenants",
+      "description": "Endpoints accessible without authentication",
+      "item": [
+        {
+          "name": "Self-Register School (Public)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{BASE_URL}}/tenants/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schoolName\": \"Green Valley Academy\",\n  \"slug\": \"green-valley-academy\",\n  \"schoolEmail\": \"info@greenvalley.edu\",\n  \"schoolPhone\": \"+8801712345678\",\n  \"address\": \"123 School Road, Dhaka, Bangladesh\",\n  \"adminFirstName\": \"John\",\n  \"adminLastName\": \"Doe\",\n  \"adminEmail\": \"admin@greenvalley.edu\",\n  \"adminPassword\": \"Admin@1234\",\n  \"adminPhone\": \"+8801712345679\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Public endpoint — no authentication required.\n\nRegisters a new school (tenant) and atomically creates the School Admin account.\n\nRules:\n• Status is always set to TRIAL automatically.\n• adminPassword must have at least 1 uppercase, 1 number, 1 special character, min 8 chars.\n• slug must be lowercase letters, numbers and hyphens only.\n• schoolEmail and adminEmail must be unique."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Super Admin Only Tenants",
+      "description": "Endpoints restricted to Super Admin (auth guard strictly enforced)",
+      "item": [
+        {
+          "name": "Create Tenant (Super Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              }
+            ],
+            "url": "{{BASE_URL}}/tenants",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schoolName\": \"Sunrise International School\",\n  \"slug\": \"sunrise-international\",\n  \"schoolEmail\": \"info@sunrise.edu\",\n  \"schoolPhone\": \"+8801899887766\",\n  \"address\": \"456 Avenue Road, Chittagong\",\n  \"adminFirstName\": \"Jane\",\n  \"adminLastName\": \"Smith\",\n  \"adminEmail\": \"admin@sunrise.edu\",\n  \"adminPassword\": \"Admin@5678\",\n  \"adminPhone\": \"+8801899887767\",\n  \"status\": \"ACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Super Admin creates a tenant manually.\n\nDifference from self-registration:\n• Can set initial `status` to ACTIVE, TRIAL, or SUSPENDED.\n• `createdBy` is set to the Super Admin's user ID.\n\nValid status values: TRIAL | ACTIVE | SUSPENDED"
+          }
+        },
+        {
+          "name": "List All Tenants",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/tenants?page=1&limit=20",
+              "query": [
+                { "key": "page", "value": "1", "description": "Page number (default: 1)" },
+                { "key": "limit", "value": "20", "description": "Items per page (default: 20)" },
+                { "key": "search", "value": "", "description": "Search by name, email or slug", "disabled": true },
+                { "key": "status", "value": "ACTIVE", "description": "Filter by status: TRIAL | ACTIVE | SUSPENDED", "disabled": true }
+              ]
+            },
+            "description": "Returns a paginated list of all tenants.\n\nOptional query filters:\n• `search` — searches name, email, and slug\n• `status` — TRIAL | ACTIVE | SUSPENDED\n• `page` — default 1\n• `limit` — default 20"
+          }
+        },
+        {
+          "name": "Get Tenant by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              }
+            ],
+            "url": "{{BASE_URL}}/tenants/{{TENANT_ID}}",
+            "description": "Get full details of a single tenant by UUID.\n\nSet the `TENANT_ID` collection variable to the UUID of the tenant."
+          }
+        },
+        {
+          "name": "Update Tenant Details",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              }
+            ],
+            "url": "{{BASE_URL}}/tenants/{{TENANT_ID}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Green Valley Academy (Updated)\",\n  \"email\": \"contact@greenvalley.edu\",\n  \"phone\": \"+8801712000000\",\n  \"address\": \"789 New Street, Dhaka\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Update editable tenant fields. All fields are optional (PATCH semantics).\n\nEditable fields: name, email, phone, address\n\nNOTE: slug is immutable and cannot be changed after creation."
+          }
+        },
+        {
+          "name": "Update Tenant Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              }
+            ],
+            "url": "{{BASE_URL}}/tenants/{{TENANT_ID}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Change the lifecycle status of a tenant.\n\nValid status values:\n• TRIAL — newly registered, limited access\n• ACTIVE — fully activated\n• SUSPENDED — access blocked"
+          }
+        }
+      ]
+    }
+  ]
+}
