@@ -64,11 +64,13 @@ export class SelfRegisterTenantDto {
 
   @IsNotEmpty()
   @IsString()
-  @MinLength(8)
-  @Matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).+$/, {
-    message:
-      'password must contain at least one uppercase letter, one number, and one special character',
-  })
+  @Matches(
+    /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,72}$/,
+    {
+      message:
+        'Password must be 8–72 characters and contain at least one uppercase letter, one number, and one special character.',
+    },
+  )
   adminPassword: string;
 
   @IsOptional()

@@ -26,3 +26,19 @@ export class CreateSubjectDto {
   @IsOptional()
   type?: SubjectType;
 }
+
+export class UpdateSubjectDto {
+  @IsString()
+  @IsOptional()
+  @MaxLength(255)
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(50)
+  code?: string | null;
+
+  @IsEnum(SubjectType)
+  @IsOptional()
+  type?: SubjectType;
+}

@@ -34,12 +34,18 @@ export class RefreshTokenUseCase {
 
     // Strategy: store the refresh token record ID in the raw token
     // Format: <recordId>.<secret> — allows O(1) lookup
-    const parts = rawRefreshToken.split('.');
-    if (parts.length < 2) throw new InvalidRefreshTokenError();
+    // Raw token format: "<recordId>.<randomSecret>"
+    // recordId  = UUID v4 (primary key of the refresh_tokens row)
+    // randomSecret = UUID v4 (extra entropy for bcrypt)
+    const dotIndex = rawRefreshToken.indexOf('.');
+    if (dotIndex === -1) throw new InvalidRefreshTokenError();
 
-    // The raw token format is: <recordId>.<randomPart1>-<randomPart2>
-    // We embedded the record ID as the first UUID segment
-    const recordId = parts.slice(0, 5).join('-'); // reconstruct UUID (5 parts with dashes)
+    const recordId = rawRefreshToken.substring(0, dotIndex);
+
+    // Validate recordId looks like a UUID before hitting the DB
+    const UUID_RE =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!UUID_RE.test(recordId)) throw new InvalidRefreshTokenError();
 
     const tokenRecord = await this.refreshTokenRepo.findById(recordId);
     if (!tokenRecord || tokenRecord.isRevoked)

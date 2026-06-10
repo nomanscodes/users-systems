@@ -25,3 +25,22 @@ export class CreateAcademicSessionDto {
   @IsOptional()
   isCurrent?: boolean;
 }
+
+export class UpdateAcademicSessionDto {
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  name?: string;
+
+  @IsDateString()
+  @IsOptional()
+  startDate?: string;
+
+  @IsDateString()
+  @IsOptional()
+  endDate?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isCurrent?: boolean;
+}

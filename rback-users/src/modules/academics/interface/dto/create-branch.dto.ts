@@ -15,3 +15,19 @@ export class CreateBranchDto {
   @MaxLength(50)
   contactNumber?: string;
 }
+
+export class UpdateBranchDto {
+  @IsString()
+  @IsOptional()
+  @MaxLength(255)
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  address?: string | null;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(50)
+  contactNumber?: string | null;
+}
