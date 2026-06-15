@@ -258,51 +258,218 @@ Use the appropriate pattern for your school (see patterns 1–4 above).
 
 ---
 
-## 🖥️ How the Frontend Uses Batches
+## 🖥️ How the Admin Thinks About Batches (The Mental Model)
 
-When a coordinator admits a student, they should never see raw UUIDs. The UI uses **cascading dropdowns**:
+This is the most critical thing to understand. Read this carefully.
+
+### ❓ The Question You Are Asking
+
+> _"How does the admin know which batch to assign a student to? Do they need to remember batch IDs?"_
+
+**Answer: No. Never. Not even once.**
+
+The admin never sees a Batch ID (UUID). They never memorize anything. The system makes this completely invisible.
+
+Here is how the admin thinks:
+
+> _"Ahmed is a new student. He will be in **Class 10, Science group, Section A** at the **Main Campus** for **2026–2027**."_
+
+That's it. That's the complete thought. The admin selects those 5 human-readable values from dropdowns — and the system automatically finds the matching Batch ID behind the scenes.
+
+---
+
+### 🎯 How Student Assignment Actually Works (Step by Step)
+
+Let's walk through the **exact real-world experience** of a school coordinator admitting a student.
+
+---
+
+**Scenario:** Ahmed just enrolled. He belongs in Class 10 Science, Section A.
+
+---
+
+**Step 1 — Coordinator opens the "Admit Student" form**
+
+The form shows cascading dropdowns. Nothing about UUIDs:
 
 ```
-┌──────────────────────────────────────┐
-│  Admit New Student                   │
-├──────────────────────────────────────┤
-│  Session:  [ 2026–2027 ▼ ] ← auto   │
-│  Branch:   [ Main Campus ▼ ]         │
-│  Class:    [ Class 10 ▼ ]            │
-│  Group:    [ Science ▼ ]             │  ← hidden if school has no groups
-│  Section:  [ Section A ▼ ]           │  ← hidden if school has no sections
-└──────────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│  📋 New Student Admission               │
+├─────────────────────────────────────────┤
+│                                         │
+│  WHERE & WHEN:                          │
+│  Session:  [ 2026–2027 ▼ ] ← auto      │  ← auto-filled (isCurrent = true)
+│  Branch:   [ Main Campus ▼ ]           │
+│                                         │
+│  WHICH CLASS:                           │
+│  Class:    [ Class 10 ▼ ]              │
+│  Group:    [ Science ▼ ]               │  ← only shown if school uses groups
+│  Section:  [ Section A ▼ ]             │  ← only shown if school uses sections
+│                                         │
+└─────────────────────────────────────────┘
 ```
 
-**Behind the scenes:**
+The coordinator selects: **Main Campus → 2026–2027 → Class 10 → Science → Section A**
 
-1. Frontend sends the selected IDs to `POST /academics/batches/resolve`
-2. Backend finds the matching batch and returns its `batchId`
-3. Frontend uses this `batchId` when submitting the student admission form
+---
+
+**Step 2 — The system silently finds the Batch ID**
+
+As soon as the coordinator finishes the dropdown selections, the frontend calls:
 
 ```http
 POST /api/v1/academics/batches/resolve
-
-Request:
 {
-  "branchId":  "uuid",
-  "sessionId": "uuid",
-  "classId":   "uuid",
-  "groupId":   "uuid-or-omit",
-  "sectionId": "uuid-or-omit"
+  "branchId":  "uuid-main-campus",
+  "sessionId": "uuid-2026-2027",
+  "classId":   "uuid-class-10",
+  "groupId":   "uuid-science",
+  "sectionId": "uuid-section-a"
 }
+```
 
-Response:
+The system finds the matching batch and returns:
+
+```json
 {
   "success": true,
   "data": {
-    "batchId": "abc-123",
+    "batchId": "abc-123-xyz",
     "label": "Class 10 – Science – Section A (2026–2027)"
   }
 }
 ```
 
-> **Note:** The `resolve` endpoint needs to be built. It is required for Phase 0.4 admissions.
+The `batchId` is now **stored silently in the frontend state**. The coordinator never sees it.
+
+---
+
+**Step 3 — Coordinator fills in student details**
+
+```
+┌─────────────────────────────────────────┐
+│  STUDENT DETAILS                        │
+├─────────────────────────────────────────┤
+│  First Name:   [ Ahmed        ]         │
+│  Last Name:    [ Rahman       ]         │
+│  Date of Birth:[ 2010-05-12   ]         │
+│  Gender:       [ Male ▼       ]         │
+│  Blood Group:  [ B+ ▼         ]         │
+│  Roll Number:  [ 15           ]         │
+└─────────────────────────────────────────┘
+
+        [ Submit Admission ]
+```
+
+---
+
+**Step 4 — Coordinator clicks Submit**
+
+The frontend sends ONE request to the backend:
+
+```http
+POST /api/v1/students/admit
+{
+  "batchId": "abc-123-xyz",        ← the silent batch ID
+  "rollNumber": "15",
+  "student": {
+    "firstName": "Ahmed",
+    "lastName": "Rahman",
+    "dateOfBirth": "2010-05-12",
+    "gender": "MALE",
+    "bloodGroup": "B+"
+  }
+}
+```
+
+The backend atomically:
+
+1. Creates the student profile in `students` table
+2. Creates the enrollment in `student_enrollments` linking student → batch
+
+Done. Ahmed is now enrolled in Class 10 Science Section A for 2026–2027.
+
+---
+
+### 🔑 The Key Insight
+
+The coordinator's mental model is always in **plain human language**:
+
+```
+"Class 10 → Science → Section A"
+```
+
+The system's internal model is always a **Batch ID**:
+
+```
+"abc-123-xyz"
+```
+
+The `resolve` endpoint is the **translation bridge** between these two worlds.
+The admin never crosses into the system's world. They always stay in their own language.
+
+---
+
+### 📋 What Happens When the Admin Lists Students?
+
+When the coordinator opens a class roster, they don't search by batch ID.
+They say: _"Show me all students in Class 10 Science Section A."_
+
+The frontend sends those dropdown values to the resolve endpoint first → gets `batchId` → then calls:
+
+```http
+GET /api/v1/batches/{batchId}/students
+```
+
+The response shows a clean student list:
+
+```
+📋 Class 10 – Science – Section A (2026–2027)
+   Main Campus
+
+   Roll │ Name           │ Status
+   ─────┼────────────────┼────────
+   01   │ Ahmed Rahman   │ Active
+   02   │ Fatima Akter   │ Active
+   03   │ Karim Hossain  │ Active
+```
+
+Again — no UUIDs visible to the admin anywhere.
+
+---
+
+### 🔄 What Happens Each New Year?
+
+The coordinator does NOT need to re-assign students to new batches manually one by one.
+
+**Year-end promotion flow:**
+
+```
+Coordinator clicks: "Promote Class 10 Science Section A → Class 11 Science"
+
+System:
+  → Takes all ACTIVE students from the 2026 batch
+  → Creates NEW student_enrollment rows for the 2027 batch
+  → Old 2026 enrollment rows stay forever (history preserved)
+  → Students now appear in Class 11 Science for 2027
+```
+
+One click. All students promoted. History never lost.
+
+---
+
+### 💡 Summary: The Admin Never Needs to Remember Batch IDs
+
+| What the admin sees                                   | What happens in the system                              |
+| ----------------------------------------------------- | ------------------------------------------------------- |
+| Selects "Class 10, Science, Section A" from dropdowns | Frontend resolves → `batchId: "abc-123"`                |
+| Clicks "Admit Student"                                | Backend stores `student_enrollment.batchId = "abc-123"` |
+| Opens "Class 10 Science" roster                       | Frontend resolves → `GET /batches/abc-123/students`     |
+| Promotes class to next year                           | Backend creates new enrollments with new `batchId`      |
+
+**The Batch ID lives entirely inside the database and API layer. The admin lives entirely inside plain English labels.**
+
+> **Note:** The `POST /batches/resolve` endpoint and `GET /batches/:id/students` endpoint both need to be built before Phase 0.4 admissions work begins.
 
 ---
 
