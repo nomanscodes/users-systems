@@ -6,6 +6,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import configService from './database/ormconfig.service';
 
 import { AcademicsModule } from './modules/academics/academics.module';
+import { PermissionsModule } from './modules/permissions/permissions.module';
+import { RolesModule } from './modules/roles/roles.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { AcademicsModule } from './modules/academics/academics.module';
     TenantsModule,
     AuthModule,
     AcademicsModule,
+    PermissionsModule,
+    RolesModule,
   ],
 })
 export class AppModule {}

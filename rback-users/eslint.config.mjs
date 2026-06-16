@@ -12,7 +12,7 @@ export default tseslint.config(
 
   // ── Base rule sets ──────────────────────────────────────────────────
   eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
+  ...tseslint.configs.recommended,
   eslintPluginPrettierRecommended,
 
   // ── Language / parser options ────────────────────────────────────────

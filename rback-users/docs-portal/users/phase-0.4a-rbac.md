@@ -10,17 +10,19 @@
 Right now the system knows a few types of users (`SUPER_ADMIN`, `SCHOOL_ADMIN`, `STAFF`). 
 But inside a school, employees do different things. A teacher and an accountant are both employees, but they need completely different access.
 
-Phase 0.4A implements a **"Smart Default + Flexible Roles"** architecture.
+Phase 0.4A implements a **"Pure System Roles"** architecture.
 
-**1. The Smart Default (Teachers):**
-Because 90% of a school's employees are teachers, the admin shouldn't have to build complex permissions for them. The system now has a dedicated `TEACHER` userType. When the admin adds a Teacher, they automatically get the basic powers they need (like taking attendance for their assigned class) — zero configuration required.
+All employees (teachers, accountants, librarians, etc.) are strictly treated as **`STAFF`** under the hood. There is no hardcoded "Teacher" user type. Instead, the admin manages everything through Roles.
 
-**2. Flexible Roles (Other Staff):**
-For everyone else (Accountants, Librarians, etc.), they are generic `STAFF`. The admin creates **custom job roles** (like "Accountant") and assigns **specific permissions** (like `fees:write`) to those roles. 
+**1. System Roles (Smart Defaults):**
+Because 90% of a school's employees are teachers, the admin shouldn't have to build complex permissions for them from scratch. When a school registers, the system automatically creates pre-configured **System Roles** (like "Teacher" and "Accountant") that come with the right permissions out-of-the-box. 
+
+**2. Custom Roles (Total Flexibility):**
+The admin can also create custom job roles (like "Librarian") and assign specific permissions to those roles.
 
 After this phase, the system can answer:
-> "Can Ahmed submit exam results?" → Yes, because he is a `TEACHER` and this is his assigned class.
-> "Can Rina view fee invoices?" → Yes, because she is `STAFF` with the "Accountant" role that has the `fees:read` permission.
+> "Can Ahmed submit exam results?" → Yes, because he is `STAFF` assigned to the "Teacher" role, which has the `exams:write` permission.
+> "Can Rina view fee invoices?" → Yes, because she is `STAFF` assigned to the "Accountant" role, which has the `fees:read` permission.
 
 ---
 
@@ -177,16 +179,15 @@ Rina (userId)
 
 ---
 
-## Special Cases: SCHOOL_ADMIN and TEACHER
+## Special Case: SCHOOL_ADMIN
 
-The PermissionGuard handles two special cases before it even checks the database:
+The PermissionGuard handles one special case before it even checks the database:
 
-### 1. The SCHOOL_ADMIN (Full Access)
+### The SCHOOL_ADMIN (Full Access)
 `SCHOOL_ADMIN` skips all permission checks. They have everything automatically. The admin can never lock themselves out by misconfiguring a role.
 
-### 2. The TEACHER (Smart Defaults)
-If `userType === 'TEACHER'`, the guard automatically grants the basic permissions needed to run a classroom (e.g., `attendance:write`, `students:read`). 
-**CRITICAL:** For teachers, passing the PermissionGuard is only Step 1. Step 2 happens in the Service Layer, which verifies that the teacher is actually assigned to the classroom they are trying to modify (via `teacher_assignments`).
+All `STAFF` members (Teachers, Accountants, etc.) MUST go through the database check to verify their roles.
+**CRITICAL:** For actions like grading exams, passing the PermissionGuard is only Step 1. Step 2 happens in the Service Layer, which verifies that the staff member is actually assigned to the classroom they are trying to modify.
 
 ```typescript
 // Inside PermissionGuard — fast exits
@@ -194,20 +195,14 @@ if (user.userType === 'SCHOOL_ADMIN') {
   return true; // Admin gets everything
 }
 
-if (user.userType === 'TEACHER') {
-  const teacherAutoPerms = ['attendance:write', 'students:read']; // expand as needed
-  if (teacherAutoPerms.includes(`${resource}:${action}`)) {
-    return true; // Auto-granted basic teacher powers
-  }
-}
-// Everyone else (and TEACHERS asking for non-default powers) goes through the DB query
+// All STAFF go through the DB query
 ```
 
 ---
 
 ## The PermissionGuard — Complete Request Flow
 
-```
+```text
 Request: POST /fees/invoices
          ↓
 JwtAuthGuard       → Valid JWT? → Extract userId, userType, tenantId
@@ -219,19 +214,18 @@ PermissionGuard    → What is required? → "fees:write" (from @RequirePermissi
          → Is userType === SCHOOL_ADMIN?
            YES → ✅ Allow immediately
          ↓
-         → Is userType === TEACHER AND permission in auto-granted list?
-           YES → ✅ Allow immediately
-         ↓
-           NO  → Run this single DB query (for STAFF, or TEACHERS doing extra duties):
+           NO  → Run this single DB query for STAFF:
 
-SELECT p.resource, p.action
+SELECT 1
 FROM user_roles ur
 JOIN role_permissions rp ON rp.roleId = ur.roleId
 JOIN permissions p ON p.id = rp.permissionId
 WHERE ur.userId = :userId AND ur.tenantId = :tenantId
+  AND p.resource = :resource AND p.action = :action
+LIMIT 1
 
          ↓
-         → Does result contain { resource: 'fees', action: 'write' }?
+         → Does the query return a result?
            YES → ✅ Allow
            NO  → ❌ ForbiddenException: "You don't have permission for this action"
 ```
@@ -280,8 +274,8 @@ The decorator stores `{ resource, action }` as route metadata. The `PermissionGu
 {
   "userId": "uuid",
   "tenantId": "uuid",
-  "userType": "TEACHER", // or "STAFF"
-  "roleNames": ["Exam Controller"] // Optional extra roles
+  "userType": "STAFF",
+  "roleNames": ["Teacher", "Exam Controller"]
 }
 ```
 

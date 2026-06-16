@@ -13,6 +13,7 @@ export interface JwtPayload {
   userType: UserType;
   tenantId: string | null;
   tokenVersion: number;
+  roleNames?: string[];
   iat: number;
   exp: number;
 }

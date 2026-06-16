@@ -72,6 +72,21 @@ export class LoginUseCase {
       }
     }
 
+    // ─── 4.5 Fetch User Roles ───
+    let roleNames: string[] = [];
+    if (user.userType === UserType.STAFF) {
+      const query = `
+        SELECT r.name 
+        FROM user_roles ur
+        JOIN roles r ON ur.roleId = r.id
+        WHERE ur.userId = ?
+      `;
+
+      const roles = await this.userRepo.query(query, [user.id]);
+
+      roleNames = roles.map((r: any) => r.name);
+    }
+
     // ─── 5. Sign Access Token ───
     const accessToken = this.jwtService.sign({
       sub: user.id,
@@ -79,6 +94,7 @@ export class LoginUseCase {
       userType: user.userType,
       tenantId: user.tenantId ?? null,
       tokenVersion: user.tokenVersion,
+      roleNames,
     });
 
     // ─── 6. Sign and store Refresh Token ───
