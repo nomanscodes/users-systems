@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 
 import { BranchTypeOrmEntity } from '../../infrastructure/typeorm/entities/branch.typeorm.entity';
 import { AcademicSessionTypeOrmEntity } from '../../infrastructure/typeorm/entities/academic-session.typeorm.entity';
@@ -38,7 +38,10 @@ import {
   CreateSubjectDto,
   UpdateSubjectDto,
 } from '../../interface/dto/create-subject.dto';
-import { CreateBatchDto } from '../../interface/dto/create-batch.dto';
+import {
+  CreateBatchDto,
+  ResolveBatchDto,
+} from '../../interface/dto/create-batch.dto';
 import { CreateSubjectAllocationDto } from '../../interface/dto/create-subject-allocation.dto';
 
 /** Helper: checks MySQL duplicate entry error code */
@@ -410,13 +413,17 @@ export class AcademicsService {
   // =====================================================================
 
   async createBatch(tenantId: string, dto: CreateBatchDto) {
-    // Fire all existence checks in parallel (GAP-04 fix)
+    // Fire all existence checks in parallel — skip optional fields when not provided
     const [branchOk, sessionOk, classOk, sectionOk, groupOk] =
       await Promise.all([
         this.branchRepo.existsBy({ id: dto.branchId, tenantId }),
         this.sessionRepo.existsBy({ id: dto.sessionId, tenantId }),
         this.classRepo.existsBy({ id: dto.classId, tenantId }),
-        this.sectionRepo.existsBy({ id: dto.sectionId, tenantId }),
+        // Only check section if it was actually provided
+        dto.sectionId
+          ? this.sectionRepo.existsBy({ id: dto.sectionId, tenantId })
+          : Promise.resolve(true),
+        // Only check group if it was actually provided
         dto.groupId
           ? this.groupRepo.existsBy({ id: dto.groupId, tenantId })
           : Promise.resolve(true),
@@ -443,17 +450,24 @@ export class AcademicsService {
         'Group not found or does not belong to your tenant.',
       );
 
-    try {
-      const batch = this.batchRepo.create({ ...dto, tenantId });
-      return await this.batchRepo.save(batch);
-    } catch (error) {
-      if (isDuplicateEntry(error)) {
-        throw new ConflictException(
-          'This exact classroom batch already exists.',
-        );
-      }
-      throw error;
+    // Explicit duplicate check using IS NULL — the DB unique index cannot catch
+    // NULL = NULL duplicates in MySQL (NULL ≠ NULL in SQL semantics).
+    const duplicate = await this.batchRepo.findOne({
+      where: {
+        tenantId,
+        branchId: dto.branchId,
+        sessionId: dto.sessionId,
+        classId: dto.classId,
+        groupId: dto.groupId ?? IsNull(),
+        sectionId: dto.sectionId ?? IsNull(),
+      },
+    });
+    if (duplicate) {
+      throw new ConflictException('This classroom batch already exists.');
     }
+
+    const batch = this.batchRepo.create({ ...dto, tenantId });
+    return this.batchRepo.save(batch);
   }
 
   async getBatches(tenantId: string) {
@@ -488,6 +502,65 @@ export class AcademicsService {
     const batch = await this.batchRepo.findOne({ where: { id, tenantId } });
     if (!batch) throw new NotFoundException('Batch not found.');
     await this.batchRepo.delete({ id, tenantId });
+  }
+
+  /**
+   * Resolves cascade dropdown selections → a single batch_id.
+   *
+   * The frontend never stores or remembers batch IDs. When a coordinator
+   * selects (Branch + Session + Class + Group? + Section?) from dropdowns,
+   * this endpoint finds the matching batch and returns its id + a
+   * human-readable label for display.
+   *
+   * Used by: Student Admission form, Attendance, Roster lookup.
+   */
+  async resolveBatch(tenantId: string, dto: ResolveBatchDto) {
+    const batch = await this.batchRepo.findOne({
+      where: {
+        tenantId,
+        branchId: dto.branchId,
+        sessionId: dto.sessionId,
+        classId: dto.classId,
+        groupId: dto.groupId ?? IsNull(),
+        sectionId: dto.sectionId ?? IsNull(),
+      },
+      relations: {
+        branch: true,
+        session: true,
+        classEntity: true,
+        group: true,
+        section: true,
+      },
+    });
+
+    if (!batch) {
+      throw new NotFoundException(
+        'No batch found for this combination. Make sure the batch has been set up for this session.',
+      );
+    }
+
+    return {
+      batchId: batch.id,
+      label: this.generateBatchLabel(batch),
+    };
+  }
+
+  /**
+   * Generates a human-readable label for a batch.
+   * Format: "Class 10 – Science – Section A (2026–2027)"
+   * Null group/section are simply omitted from the label.
+   */
+  generateBatchLabel(batch: {
+    classEntity: { name: string };
+    group: { name: string } | null;
+    section: { name: string } | null;
+    session: { name: string };
+  }): string {
+    const parts: string[] = [batch.classEntity.name];
+    if (batch.group) parts.push(batch.group.name);
+    if (batch.section) parts.push(batch.section.name);
+    parts.push(`(${batch.session.name})`);
+    return parts.join(' \u2013 ');
   }
 
   // =====================================================================

@@ -59,13 +59,13 @@ export class BatchTypeOrmEntity {
   @JoinColumn({ name: 'groupId' })
   group: GroupTypeOrmEntity | null;
 
-  // Section Relation
-  @Column({ type: 'varchar', length: 36 })
-  sectionId: string;
+  // Section Relation (Optional — many schools have no section divisions)
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  sectionId: string | null;
 
-  @ManyToOne(() => SectionTypeOrmEntity)
+  @ManyToOne(() => SectionTypeOrmEntity, { nullable: true })
   @JoinColumn({ name: 'sectionId' })
-  section: SectionTypeOrmEntity;
+  section: SectionTypeOrmEntity | null;
 
   @CreateDateColumn()
   createdAt: Date;

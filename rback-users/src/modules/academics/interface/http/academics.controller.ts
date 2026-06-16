@@ -30,7 +30,7 @@ import {
   UpdateSectionDto,
 } from '../dto/create-group-section.dto';
 import { CreateSubjectDto, UpdateSubjectDto } from '../dto/create-subject.dto';
-import { CreateBatchDto } from '../dto/create-batch.dto';
+import { CreateBatchDto, ResolveBatchDto } from '../dto/create-batch.dto';
 import { CreateSubjectAllocationDto } from '../dto/create-subject-allocation.dto';
 
 /**
@@ -353,6 +353,25 @@ export class AcademicsController {
   @Get('batches')
   async getBatches(@CurrentUser() user: JwtPayload) {
     const data = await this.academicsService.getBatches(user.tenantId);
+    return success(data);
+  }
+
+  /**
+   * POST /academics/batches/resolve
+   *
+   * Translates human-readable cascade dropdown selections into a single
+   * batch_id. The frontend calls this automatically when the coordinator
+   * finishes selecting Branch + Session + Class + Group? + Section?.
+   *
+   * IMPORTANT: This route MUST be declared before GET /batches/:id
+   * so that NestJS does not treat the literal string 'resolve' as an :id.
+   */
+  @Post('batches/resolve')
+  async resolveBatch(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: ResolveBatchDto,
+  ) {
+    const data = await this.academicsService.resolveBatch(user.tenantId, dto);
     return success(data);
   }
 

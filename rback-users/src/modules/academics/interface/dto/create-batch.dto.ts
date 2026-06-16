@@ -15,9 +15,31 @@ export class CreateBatchDto {
 
   @IsUUID()
   @IsOptional()
-  groupId?: string; // Optional for lower classes without groups
+  groupId?: string; // Optional — some schools have no streams/groups
+
+  @IsUUID()
+  @IsOptional()
+  sectionId?: string; // Optional — some schools have no section divisions
+}
+
+export class ResolveBatchDto {
+  @IsUUID()
+  @IsNotEmpty()
+  branchId: string;
 
   @IsUUID()
   @IsNotEmpty()
-  sectionId: string;
+  sessionId: string;
+
+  @IsUUID()
+  @IsNotEmpty()
+  classId: string;
+
+  @IsUUID()
+  @IsOptional()
+  groupId?: string;
+
+  @IsUUID()
+  @IsOptional()
+  sectionId?: string;
 }
