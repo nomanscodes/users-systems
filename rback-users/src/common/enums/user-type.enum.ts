@@ -1,6 +1,7 @@
 export enum UserType {
   SUPER_ADMIN = 'SUPER_ADMIN',
   SCHOOL_ADMIN = 'SCHOOL_ADMIN',
+  TEACHER = 'TEACHER',
   STAFF = 'STAFF',
   PARENT = 'PARENT',
   STUDENT = 'STUDENT',

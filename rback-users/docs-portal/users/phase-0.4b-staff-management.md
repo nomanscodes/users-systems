@@ -7,16 +7,23 @@
 
 ## What We Are Building (Plain English)
 
-The School Admin needs to add their employees to the system — teachers, accountants, librarians, etc.
+The School Admin needs to add their employees to the system. Thanks to the architecture from Phase 0.4A, there are two paths:
 
-Each employee gets:
-1. A **login account** (from the existing `users` table, userType = `STAFF`)
+**Path 1: Adding a Teacher**
+The admin selects "Teacher". The system creates a `TEACHER` user account. No complex roles are needed. The admin then assigns them to a classroom. The teacher automatically gets the powers to run that classroom.
+
+**Path 2: Adding Other Staff**
+The admin selects "Staff". The system creates a `STAFF` user account. The admin MUST select custom roles (like "Accountant" or "Librarian") so the system knows what this person is allowed to do.
+
+Each employee (Teacher or Staff) gets:
+1. A **login account** (userType = `TEACHER` or `STAFF`)
 2. A **staff profile** (job details — designation, department, joining date)
-3. **Role assignments** (what they are allowed to do — from Phase 0.4A)
-4. **Teaching assignments** (which subject they teach in which classroom batch)
+3. **Role assignments** (optional for teachers, mandatory for staff)
+4. **Teaching assignments** (only for teachers — which subject in which batch)
 
 After this phase, the system knows:
-> "Ahmed Khan is a Senior Teacher in the Science Department. He teaches Physics in Class 10 Science Section A and Class 9 Science Section B."
+> "Ahmed Khan is a TEACHER. He teaches Physics in Class 10 Science Section A."
+> "Rina Begum is STAFF. Her role is Accountant."
 
 ---
 
@@ -74,11 +81,13 @@ The admin does NOT create a username/password manually. The system handles it.
 Step 1 — Admin fills invite form:
   { email, firstName, lastName, phone,
     designation, department,
-    roleIds: ["uuid-role-teacher"] }
+    userType: "TEACHER",             ← Can be "TEACHER" or "STAFF"
+    roleIds: []                      ← Optional if TEACHER. Required if STAFF.
+  }
 
 Step 2 — System creates users record:
   { email, firstName, lastName,
-    userType: "STAFF",
+    userType: from payload,
     tenantId: admin's tenantId,
     password: temp-password (hashed) }
 
@@ -88,7 +97,7 @@ Step 3 — System creates staff_profiles record:
     designation,
     department }
 
-Step 4 — System assigns roles from roleIds:
+Step 4 — System assigns roles from roleIds (if any):
   INSERT INTO user_roles (userId, roleId, tenantId)
 
 Step 5 — Staff member receives credentials
