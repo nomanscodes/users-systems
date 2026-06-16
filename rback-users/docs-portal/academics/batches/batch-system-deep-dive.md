@@ -576,13 +576,13 @@ if (existing) {
 
 ## ✅ Summary Checklist (Before Phase 0.4)
 
-| Task                                      | Status                     |
-| ----------------------------------------- | -------------------------- |
-| Make `sectionId` nullable in entity       | ❌ Not done                |
-| Make `sectionId` optional in DTO          | ❌ Not done                |
-| Write DB migration for nullable sectionId | ❌ Not done                |
-| Fix duplicate check to handle NULL fields | ❌ Not done                |
-| Build `POST /batches/resolve` endpoint    | ❌ Not done                |
-| Build session clone endpoint              | ❌ Not done (nice to have) |
+| Task                                      | Status                      |
+| ----------------------------------------- | --------------------------- |
+| Make `sectionId` nullable in entity       | ✅ Done                     |
+| Make `sectionId` optional in DTO          | ✅ Done                     |
+| Write DB migration for nullable sectionId | ✅ Auto-applied (dev sync)  |
+| Fix duplicate check to handle NULL fields | ✅ Done (IsNull + findOne)  |
+| Build `POST /batches/resolve` endpoint    | ✅ Done                     |
+| Build session clone endpoint              | ⏳ Nice to have (Phase 0.4) |
 
-All items marked ❌ must be completed before student admissions (Phase 0.4C) can be built.
+All critical items are complete. Phase 0.4 student admissions can now be built.
