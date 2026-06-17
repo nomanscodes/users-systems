@@ -72,18 +72,19 @@ export class LoginUseCase {
       }
     }
 
-    // ─── 4.5 Fetch User Roles ───
+    // ─── 4.5 Fetch User Roles for JWT (display purposes) ───
     let roleNames: string[] = [];
-    if (user.userType === UserType.STAFF) {
+    if (user.userType === UserType.SCHOOL_ADMIN) {
+      // SCHOOL_ADMIN has no DB roles — use a fixed display label
+      roleNames = ['School Admin'];
+    } else if (user.userType === UserType.STAFF) {
       const query = `
         SELECT r.name 
         FROM user_roles ur
         JOIN roles r ON ur.roleId = r.id
         WHERE ur.userId = ?
       `;
-
       const roles = await this.userRepo.query(query, [user.id]);
-
       roleNames = roles.map((r: any) => r.name);
     }
 

@@ -87,11 +87,12 @@ export class RolesController {
 }
 
 @Controller('api/v1/permissions')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, TenantScopeGuard, PermissionGuard)
 export class PermissionsController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Get()
+  @RequirePermission('roles', 'read')
   async getAllPermissions() {
     return this.rolesService.getAllPermissions();
   }
