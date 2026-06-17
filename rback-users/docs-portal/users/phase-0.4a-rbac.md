@@ -327,23 +327,25 @@ GET    /api/v1/staff/:userId/roles              ← List staff member's roles
 ```
 Principal (SCHOOL_ADMIN) logs in and:
 
-1. Creates role: "Accountant"
-2. Assigns permissions to it: fees:read, fees:write
+1. Creates role: "Teacher"
+2. Assigns permissions to it: students:read, attendance:write, exams:write
 
-3. Invites Ahmed Khan as `TEACHER`. (Zero setup required!)
-4. Invites Rina Begum as `STAFF`, assigns role "Accountant".
+3. Creates role: "Accountant"
+4. Assigns permissions to it: fees:read, fees:write
+
+5. Invites Ahmed Khan as STAFF, assigns him the "Teacher" role.
+6. Invites Rina Begum as STAFF, assigns her the "Accountant" role.
 
 Ahmed logs in:
-  → Can view his assigned students ✅ (Auto-granted to TEACHER)
-  → Can take attendance for his class ✅ (Auto-granted to TEACHER)
-  → Cannot view fees ❌
-  → Cannot view other teachers' classes ❌ (Service layer blocks it)
+  → Can view students ✅  (Teacher role has students:read)
+  → Can mark attendance ✅ (Teacher role has attendance:write)
+  → Cannot view fees ❌   (Teacher role has no fees permission)
 
 Rina logs in:
-  → Can view fees ✅ (Role permission)
-  → Can create fee invoices ✅ (Role permission)
+  → Can view fees ✅          (Accountant role has fees:read)
+  → Can create fee invoices ✅ (Accountant role has fees:write)
   → Cannot view students ❌
-  → Cannot take attendance ❌
+  → Cannot mark attendance ❌
 ```
 
 ---

@@ -57,17 +57,11 @@ const systemPermissions = [
 
 ---
 
-## 3. Tenant Registration (Auto-Roles)
+## 3. ~~Tenant Registration (Auto-Roles)~~ — Removed
 
-When a new school registers (in `RegisterTenantUseCase`), the system must automatically create the default System Roles for them.
-
-**Role 1: "Teacher" (`isSystemRole: true`)**
-- Receives permissions: `students:read`, `attendance:write`, `exams:write`.
-
-**Role 2: "Accountant" (`isSystemRole: true`)**
-- Receives permissions: `fees:read`, `fees:write`.
-
-*(These roles are tenant-scoped, meaning they are inserted into the `roles` table with the new school's `tenantId`).*
+> **Decision:** Auto-seeding default roles on registration has been **removed** to allow the School Admin to build their roles step-by-step via the API. There are no hardcoded roles created during tenant registration.
+>
+> The admin can create a "Teacher" or "Accountant" role manually via `POST /api/v1/roles` and then assign permissions to it.
 
 ---
 
@@ -122,10 +116,14 @@ export interface JwtPayload {
 
 ## Execution Checklist
 
-- [ ] Create 4 TypeORM Entities
-- [ ] Implement `PermissionsSeederService`
-- [ ] Update `RegisterTenantUseCase` to auto-create Teacher/Accountant roles
-- [ ] Create `@RequirePermission` and `PermissionGuard`
-- [ ] Create `RolesModule` CRUD endpoints
-- [ ] Update JWT Payload to include `roleNames`
-- [ ] Apply `PermissionGuard` to Phase 0.3 Academics endpoints (`academics:write`)
+- [x] Create 4 TypeORM Entities
+- [x] Implement `PermissionsSeederService` (20 permissions seeded on boot)
+- [x] Create `@RequirePermission` decorator
+- [x] Create `PermissionGuard` (SCHOOL_ADMIN bypass + DB query for STAFF)
+- [x] Create `RolesModule` CRUD endpoints
+- [x] Update JWT Payload to include `roleNames` for STAFF users
+- [x] Apply `PermissionGuard` to all Academics endpoints
+- [ ] Add `POST /api/v1/staff/:userId/roles` — Assign role to staff *(Phase 0.4B)*
+- [ ] Add `DELETE /api/v1/staff/:userId/roles/:roleId` — Remove role from staff *(Phase 0.4B)*
+- [ ] Add `GET /api/v1/staff/:userId/roles` — List staff roles *(Phase 0.4B)*
+- [ ] Fix `PermissionsController` — add `TenantScopeGuard` + `RequirePermission('roles','read')`
