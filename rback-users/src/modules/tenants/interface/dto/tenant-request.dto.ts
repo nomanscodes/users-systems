@@ -22,15 +22,6 @@ export class SelfRegisterTenantDto {
   schoolName: string;
 
   @IsNotEmpty()
-  @IsString()
-  @MinLength(2)
-  @MaxLength(100)
-  @Matches(/^[a-z0-9-]+$/, {
-    message: 'slug must be lowercase letters, numbers, and hyphens only',
-  })
-  slug: string;
-
-  @IsNotEmpty()
   @IsEmail()
   @MaxLength(255)
   schoolEmail: string;

@@ -9,7 +9,6 @@ import { TenantEntity } from '../../domain/entities/tenant.entity';
 import { TenantStatus } from '../../../../common/enums/tenant-status.enum';
 import { UserType } from '../../../../common/enums/user-type.enum';
 import { UserStatus } from '../../../../common/enums/user-status.enum';
-import { TenantSlugAlreadyExistsError } from '../../domain/errors/tenant-slug-exists.error';
 import { TenantEmailAlreadyExistsError } from '../../domain/errors/tenant-email-exists.error';
 import { AdminEmailAlreadyExistsError } from '../../domain/errors/admin-email-exists.error';
 import { TenantMapper } from '../mappers/tenant.mapper';
@@ -18,7 +17,6 @@ import type { TenantRepositoryPort } from '../../domain/repositories/tenant.repo
 
 export interface RegisterTenantInput {
   schoolName: string;
-  slug: string;
   schoolEmail: string;
   schoolPhone?: string | null;
   address?: string | null;
@@ -40,6 +38,24 @@ export class RegisterTenantUseCase {
     private readonly configService: ConfigService,
   ) {}
 
+  private async generateUniqueSlug(name: string): Promise<string> {
+    const baseSlug = name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    let slug = baseSlug || 'tenant';
+    let counter = 1;
+
+    while (await this.tenantRepo.findBySlug(slug)) {
+      slug = `${baseSlug || 'tenant'}-${counter}`;
+      counter++;
+    }
+
+    return slug;
+  }
+
   /**
    * @param input       - School and admin details from the request DTO
    * @param createdBy   - null for self-registration; Super Admin user ID when admin creates
@@ -51,8 +67,6 @@ export class RegisterTenantUseCase {
     initialStatus?: TenantStatus,
   ) {
     // ─── 1. Uniqueness checks ───
-    const existingBySlug = await this.tenantRepo.findBySlug(input.slug);
-    if (existingBySlug) throw new TenantSlugAlreadyExistsError(input.slug);
 
     const existingByEmail = await this.tenantRepo.findByEmail(
       input.schoolEmail,
@@ -65,9 +79,10 @@ export class RegisterTenantUseCase {
       .findOneBy({ email: input.adminEmail });
     if (existingUser) throw new AdminEmailAlreadyExistsError(input.adminEmail);
 
-    // ─── 2. Hash admin password ───
+    // ─── 2. Hash admin password & Generate Slug ───
     const saltRounds = this.configService.get<number>('BCRYPT_SALT_ROUNDS', 12);
     const passwordHash = await bcrypt.hash(input.adminPassword, +saltRounds);
+    const generatedSlug = await this.generateUniqueSlug(input.schoolName);
 
     // ─── 3. Atomic transaction: create tenant + school admin ───
     const queryRunner = this.dataSource.createQueryRunner();
@@ -85,7 +100,7 @@ export class RegisterTenantUseCase {
       await queryRunner.manager.insert('tenants', {
         id: tenantId,
         name: input.schoolName,
-        slug: input.slug,
+        slug: generatedSlug,
         email: input.schoolEmail,
         phone: input.schoolPhone ?? null,
         address: input.address ?? null,
@@ -117,7 +132,7 @@ export class RegisterTenantUseCase {
       const tenant = new TenantEntity(
         tenantId,
         input.schoolName,
-        input.slug,
+        generatedSlug,
         input.schoolEmail,
         input.schoolPhone ?? null,
         input.address ?? null,

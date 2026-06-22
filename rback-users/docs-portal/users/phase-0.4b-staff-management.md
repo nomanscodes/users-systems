@@ -121,9 +121,12 @@ Step 3 — System creates staff_profiles record:
 Step 4 — System assigns roles from roleIds (if any):
   INSERT INTO user_roles (userId, roleId, tenantId)
 
-Step 5 — Staff member receives credentials
-  (for now: return temp password in response)
-  (future: send email with login link)
+Step 5 — Credentials & Login Lifecycle
+  1. The API returns the plain-text temporary password in the JSON response to the Admin.
+  2. The Admin securely hands this temporary password to the new staff member.
+  3. The staff member logs in using their email and the temporary password.
+  4. (Best Practice) The frontend detects the use of a temporary password and immediately forces the staff member to set their own private password before accessing the dashboard.
+  (future: The system skips the Admin and automatically emails the staff member a secure "Set Your Password" link).
 ```
 
 Everything in Steps 2–4 happens in a **single database transaction**. If any step fails, everything rolls back.
