@@ -21,7 +21,7 @@ import { RequirePermission } from '../../../../common/decorators/require-permiss
 import { CurrentUser } from '../../../../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../../../auth/interface/strategies/jwt.strategy';
 
-@Controller('api/v1/roles')
+@Controller('roles')
 @UseGuards(JwtAuthGuard, TenantScopeGuard, PermissionGuard)
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
@@ -86,7 +86,7 @@ export class RolesController {
   }
 }
 
-@Controller('api/v1/permissions')
+@Controller('permissions')
 @UseGuards(JwtAuthGuard, TenantScopeGuard, PermissionGuard)
 export class PermissionsController {
   constructor(private readonly rolesService: RolesService) {}
