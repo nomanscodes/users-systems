@@ -8,6 +8,8 @@ import configService from './database/ormconfig.service';
 import { AcademicsModule } from './modules/academics/academics.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RolesModule } from './modules/roles/roles.module';
+import { DesignationsModule } from './modules/designations/designations.module';
+import { StaffModule } from './modules/staff/staff.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { RolesModule } from './modules/roles/roles.module';
     AcademicsModule,
     PermissionsModule,
     RolesModule,
+    DesignationsModule,
+    StaffModule,
   ],
 })
 export class AppModule {}
