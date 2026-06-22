@@ -12,10 +12,7 @@ import { UserStatus } from '../../../../common/enums/user-status.enum';
 @Entity('users')
 @Index('idx_user_email', ['email'], { unique: true })
 @Index('idx_user_tenant', ['tenantId'])
-@Index('idx_user_type', ['tenantId', 'userType'], {
-  unique: true,
-  where: "userType = 'SCHOOL_ADMIN'",
-})
+@Index('idx_user_type', ['tenantId', 'userType'])
 export class UserTypeOrmEntity {
   @PrimaryColumn({ type: 'varchar', length: 36 })
   id: string;
