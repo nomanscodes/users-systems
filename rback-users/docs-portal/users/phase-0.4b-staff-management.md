@@ -7,36 +7,54 @@
 
 ## What We Are Building (Plain English)
 
-The School Admin needs to add their employees to the system. Thanks to the architecture from Phase 0.4A, there are two paths:
+The School Admin needs to add their employees to the system. Thanks to the architecture from Phase 0.4A, all employees are treated strictly as `STAFF`. There is no separate `TEACHER` user type.
 
-**Path 1: Adding a Teacher**
-The admin selects "Teacher". The system creates a `TEACHER` user account. No complex roles are needed. The admin then assigns them to a classroom. The teacher automatically gets the powers to run that classroom.
+**Adding Staff (Including Teachers)**
+The admin invites an employee to the system.
 
-**Path 2: Adding Other Staff**
-The admin selects "Staff". The system creates a `STAFF` user account. The admin MUST select custom roles (like "Accountant" or "Librarian") so the system knows what this person is allowed to do.
+1. **Designation (Job Title & Category):** The admin selects an official Designation (e.g., "Senior Science Teacher", which is categorized as `TEACHING`). This ensures the user appears correctly in UI filters (like the "Assign Teacher" dropdown).
+2. **Roles (Permissions):** The admin MUST select custom roles (like "Teacher", "Accountant") so the system knows what this person is allowed to do.
 
-Each employee (Teacher or Staff) gets:
-1. A **login account** (userType = `TEACHER` or `STAFF`)
-2. A **staff profile** (job details — designation, department, joining date)
-3. **Role assignments** (optional for teachers, mandatory for staff)
-4. **Teaching assignments** (only for teachers — which subject in which batch)
+Each employee gets:
+
+1. A **login account** (userType = `STAFF`)
+2. A **staff profile** (linked to an official `designationId` instead of a free-text string)
+3. **Role assignments** (mandatory for all staff to have permissions)
+4. **Teaching assignments** (only for staff with a `TEACHING` designation — which subject in which batch)
 
 After this phase, the system knows:
-> "Ahmed Khan is a TEACHER. He teaches Physics in Class 10 Science Section A."
-> "Rina Begum is STAFF. Her role is Accountant."
+
+> "Ahmed Khan is STAFF with the 'Senior Science Teacher' designation and 'Teacher' role."
+> "Rina Begum is STAFF with the 'Chief Accountant' designation and 'Accountant' role."
 
 ---
 
 ## Database Schema
 
+### `designations` table (Lookup Table)
+
+```sql
+CREATE TABLE designations (
+  id              VARCHAR(36)    PRIMARY KEY DEFAULT (UUID()),
+  tenantId        VARCHAR(36)    NOT NULL,
+  title           VARCHAR(100)   NOT NULL,
+  category        ENUM('TEACHING', 'NON_TEACHING', 'ADMIN') DEFAULT 'NON_TEACHING',
+  createdAt       DATETIME       DEFAULT NOW(),
+  updatedAt       DATETIME       DEFAULT NOW() ON UPDATE NOW(),
+
+  INDEX idx_tenant_designation (tenantId)
+);
+```
+
 ### `staff_profiles` table
+
 ```sql
 CREATE TABLE staff_profiles (
   id               VARCHAR(36)    PRIMARY KEY DEFAULT (UUID()),
   userId           VARCHAR(36)    NOT NULL UNIQUE,
   tenantId         VARCHAR(36)    NOT NULL,
+  designationId    VARCHAR(36)    NOT NULL,
   employeeId       VARCHAR(50),
-  designation      VARCHAR(100),
   department       VARCHAR(100),
   joiningDate      DATE,
   qualification    VARCHAR(255),
@@ -46,11 +64,13 @@ CREATE TABLE staff_profiles (
   updatedAt        DATETIME       DEFAULT NOW() ON UPDATE NOW(),
 
   FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (designationId) REFERENCES designations(id),
   INDEX idx_tenant_staff (tenantId)
 );
 ```
 
 ### `teacher_assignments` table
+
 ```sql
 CREATE TABLE teacher_assignments (
   id             VARCHAR(36)  PRIMARY KEY DEFAULT (UUID()),
@@ -80,21 +100,22 @@ The admin does NOT create a username/password manually. The system handles it.
 ```
 Step 1 — Admin fills invite form:
   { email, firstName, lastName, phone,
-    designation, department,
-    userType: "TEACHER",             ← Can be "TEACHER" or "STAFF"
-    roleIds: []                      ← Optional if TEACHER. Required if STAFF.
+    designationId: "uuid-from-designations-table",
+    department,
+    userType: "STAFF",               ← Always "STAFF" for employees
+    roleIds: ["uuid-for-role"]       ← Mandatory so the user has permissions
   }
 
 Step 2 — System creates users record:
   { email, firstName, lastName,
-    userType: from payload,
+    userType: "STAFF",
     tenantId: admin's tenantId,
     password: temp-password (hashed) }
 
 Step 3 — System creates staff_profiles record:
   { userId: new user's id,
     tenantId,
-    designation,
+    designationId,
     department }
 
 Step 4 — System assigns roles from roleIds (if any):
@@ -124,6 +145,7 @@ Body: { batchId, subjectId }
 ```
 
 The system checks:
+
 1. Does the staff member belong to this tenant?
 2. Does the batch belong to this tenant?
 3. Does the subject belong to this tenant?
@@ -133,7 +155,17 @@ The system checks:
 
 ## API Endpoints
 
+### Designation Management
+
+```
+POST   /api/v1/designations    ← Create new official job title & category
+GET    /api/v1/designations    ← List all designations for tenant
+PATCH  /api/v1/designations/:id ← Update title or category
+DELETE /api/v1/designations/:id ← Delete (fails if assigned to staff)
+```
+
 ### Staff Account Management
+
 ```
 POST   /api/v1/staff/invite    ← Create user + profile + assign roles (atomic)
 GET    /api/v1/staff           ← List all staff (tenant-scoped)
@@ -143,6 +175,7 @@ DELETE /api/v1/staff/:id       ← Deactivate (set isActive = false on users rec
 ```
 
 ### Role Assignment (uses Phase 0.4A)
+
 ```
 POST   /api/v1/staff/:id/roles           ← Assign role(s) to staff
 DELETE /api/v1/staff/:id/roles/:roleId   ← Remove role from staff
@@ -150,6 +183,7 @@ GET    /api/v1/staff/:id/roles           ← List staff's current roles
 ```
 
 ### Teaching Assignments
+
 ```
 POST   /api/v1/staff/:id/assignments                    ← Assign to batch + subject
 GET    /api/v1/staff/:id/assignments                    ← List all assignments
@@ -164,6 +198,7 @@ GET    /api/v1/batches/:batchId/teachers               ← Who teaches in this b
 When a STAFF user logs in, they see their own profile and their assigned batches/subjects.
 
 The system can answer:
+
 - "What classes does Ahmed Khan teach?" → `GET /staff/:id/assignments`
 - "Who teaches Physics in Class 10 Science?" → `GET /batches/:id/teachers?subjectId=uuid`
 
@@ -180,7 +215,9 @@ The system can answer:
 
 ## Implementation Checklist
 
-- [ ] Create `StaffProfileTypeOrmEntity`
+- [ ] Create `DesignationTypeOrmEntity`
+- [ ] Create `DesignationsModule` (entity, service, controller)
+- [ ] Create `StaffProfileTypeOrmEntity` (linking to Designation)
 - [ ] Create `TeacherAssignmentTypeOrmEntity`
 - [ ] Create `StaffModule` (entity, service, controller)
 - [ ] Implement `POST /staff/invite` with transaction (user + profile + roles)
@@ -194,4 +231,4 @@ The system can answer:
 ## Next Step
 
 Once this is done → **Phase 0.4C (Student Admissions)**
-Students are admitted into batches — batches and staff must already exist.
+Students are admitted into batches — batches, staff, and designations must already exist.
