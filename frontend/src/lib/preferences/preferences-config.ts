@@ -66,9 +66,9 @@ type PreferencePersistenceConfig = {
  * Default preference values on first load.
  */
 export const PREFERENCE_DEFAULTS: PreferenceValueMap = {
-  theme_mode: "light",
+  theme_mode: "dark",        // Default: dark (design system dark-first). Light mode is also supported.
   theme_preset: "default",
-  font: "geist",
+  font: "inter",             // Design system: Inter font
   content_layout: "centered",
   navbar_style: "sticky",
   sidebar_variant: "inset",

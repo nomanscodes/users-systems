@@ -1,13 +1,8 @@
-import { MetricCards } from "./_components/metric-cards";
-import { PerformanceOverview } from "./_components/performance-overview";
-import { SubscriberOverview } from "./_components/subscriber-overview";
-
 export default function Page() {
   return (
-    <div className="@container/main flex flex-col gap-4 md:gap-6">
-      <MetricCards />
-      <PerformanceOverview />
-      <SubscriberOverview />
+    <div className="flex flex-col items-center justify-center h-48 gap-2 text-muted-foreground">
+      <p className="text-lg font-medium">Dashboard</p>
+      <p className="text-sm">Page content coming soon.</p>
     </div>
   );
 }

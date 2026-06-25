@@ -54,90 +54,173 @@
 
 /* Default theme styles (used when no data-theme-preset is set or when 'default' is selected).
 These serve as the fallback; there is no separate default.css file. */
-:root {
-  --radius: 0.625rem;
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+/* ═══════════════════════════════════════════════════════════════════
+   SMS SaaS Design System — Light & Dark Mode
+   Colors sourced from: docs-portal/ui-design-system.md
+   Default: DARK. Light mode uses same indigo accent, inverted layers.
+   Pattern: :root = light | .dark = dark (matches template preset convention)
+   ═══════════════════════════════════════════════════════════════════ */
 
-  /* fonts */
-  --font-sans: var(--font-geist);
-  --font-mono: var(--font-geist-mono);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+/* ─────────────────────────────────────────────
+   LIGHT MODE — :root (no .dark class on html)
+   ───────────────────────────────────────────── */
+:root {
+  /* Radius scale */
+  --radius: 0.75rem;            /* 12px — page cards */
+  --radius-input: 0.5rem;       /* 8px  — inputs */
+  --radius-btn: 0.625rem;       /* 10px — buttons */
+  --radius-pill: 624.9375rem;   /* 999px — pills/badges */
+
+  /* Gradient & fonts (shared) */
+  --accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+  --font-sans: var(--font-inter, var(--font-geist, system-ui, sans-serif));
+  --font-mono: var(--font-geist-mono, monospace);
+
+  /* Status colors (same in both modes) */
+  --success:                 #22c55e;
+  --warning:                 #f59e0b;
+  --info:                    #38bdf8;
+
+  /* Background layers */
+  --background:              #f8fafc;  /* lightest slate — page bg */
+  --card:                    #ffffff;  /* pure white — cards, panels */
+  --elevated:                #f1f5f9;  /* very light slate — hover, sub-cards */
+  --popover:                 #ffffff;
+
+  /* Text */
+  --foreground:              #0f172a;  /* dark navy — primary text */
+  --card-foreground:         #0f172a;
+  --popover-foreground:      #0f172a;
+  --secondary-foreground:    #1e293b;
+  --accent-foreground:       #1e293b;
+  --muted-foreground:        #64748b;  /* slate-500 — hints, labels */
+  --primary-foreground:      #ffffff;
+
+  /* Borders */
+  --border:                  #e2e8f0;  /* slate-200 — card/input borders */
+  --input:                   #ffffff;  /* white input bg */
+  --ring:                    #6366f1;  /* same focus ring as dark */
+
+  /* Primary = Indigo (same accent as dark) */
+  --primary:                 #6366f1;
+
+  /* Muted surfaces */
+  --secondary:               #f1f5f9;
+  --muted:                   #f1f5f9;
+  --accent:                  #f1f5f9;
+
+  /* Destructive */
+  --destructive:             #ef4444;
+
+  /* Sidebar */
+  --sidebar:                 #ffffff;  /* white sidebar bg */
+  --sidebar-foreground:      #0f172a;
+  --sidebar-primary:         #6366f1;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent:          #f1f5f9;
+  --sidebar-accent-foreground: #1e293b;
+  --sidebar-border:          #e2e8f0;
+  --sidebar-ring:            #6366f1;
+
+  /* Charts */
+  --chart-1:                 #6366f1;
+  --chart-2:                 #8b5cf6;
+  --chart-3:                 #22c55e;
+  --chart-4:                 #f59e0b;
+  --chart-5:                 #38bdf8;
 }
 
+/* ─────────────────────────────────────────────
+   DARK MODE — .dark class on <html> (primary/default)
+   Colors from: docs-portal/ui-design-system.md
+   ───────────────────────────────────────────── */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Background layers */
+  --background:              #0f172a;  /* bg-base — outermost page bg */
+  --card:                    #1e293b;  /* bg-card — cards, panels, modals */
+  --elevated:                #263347;  /* bg-elevated — hover, nested sub-cards */
+  --popover:                 #1e293b;
+
+  /* Text */
+  --foreground:              #f8fafc;  /* text-primary */
+  --card-foreground:         #f8fafc;
+  --popover-foreground:      #f8fafc;
+  --secondary-foreground:    #f8fafc;
+  --accent-foreground:       #f8fafc;
+  --muted-foreground:        #94a3b8;  /* text-secondary */
+  --primary-foreground:      #ffffff;
+
+  /* Borders */
+  --border:                  #334155;  /* border-default */
+  --input:                   #0f172a;
+  --ring:                    #6366f1;
+
+  /* Primary */
+  --primary:                 #6366f1;
+
+  /* Muted surfaces */
+  --secondary:               #263347;
+  --muted:                   #263347;
+  --accent:                  #263347;
+
+  /* Destructive */
+  --destructive:             #ef4444;
+
+  /* Sidebar */
+  --sidebar:                 #0f172a;
+  --sidebar-foreground:      #f8fafc;
+  --sidebar-primary:         #6366f1;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent:          #263347;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border:          #334155;
+  --sidebar-ring:            #6366f1;
+
+  /* Charts */
+  --chart-1:                 #6366f1;
+  --chart-2:                 #8b5cf6;
+  --chart-3:                 #22c55e;
+  --chart-4:                 #f59e0b;
+  --chart-5:                 #38bdf8;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    /* Design rule: no box-shadow anywhere — use border instead */
+    box-shadow: none !important;
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans), system-ui, sans-serif;
+    /* Base font size & line height per design system */
+    font-size: 14px;
+    line-height: 1.5;
   }
+
   html {
     @apply font-sans;
+  }
+
+  /* ── Design System: Typography helpers ── */
+  .ds-label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin-bottom: 12px;
+  }
+
+  /* ── Design System: Accent gradient utility ── */
+  .ds-accent-bg {
+    background: var(--accent-gradient);
+  }
+
+  /* ── Design System: Elevated surface ── */
+  .ds-elevated {
+    background: var(--elevated);
   }
 }
 
