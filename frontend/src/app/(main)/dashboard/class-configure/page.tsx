@@ -6,6 +6,7 @@ import { CLASSES } from "./_components/constants";
 import { defaultConfig, labelsFor, toggleArr } from "./_components/utils";
 import type { ClassConfig } from "./_components/types";
 
+import { PageContainer } from "@/components/page-container";
 import { BranchSessionSelector } from "./_components/branch-session-selector";
 import { ClassSelector } from "./_components/class-selector";
 import { ClassConfigList } from "./_components/class-config-list";
@@ -56,7 +57,7 @@ export default function ClassConfigurePage() {
   }, [orderedSelected, configs]);
 
   return (
-    <div className="mx-auto max-w-[800px] space-y-6 py-8">
+    <PageContainer>
       {/* Page header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
@@ -95,6 +96,6 @@ export default function ClassConfigurePage() {
         created={created}
         onGenerate={() => setCreated(true)}
       />
-    </div>
+    </PageContainer>
   );
 }
