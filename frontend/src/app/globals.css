@@ -77,57 +77,59 @@ These serve as the fallback; there is no separate default.css file. */
   --font-mono: var(--font-geist-mono, monospace);
 
   /* Status colors (same in both modes) */
-  --success:                 #22c55e;
-  --warning:                 #f59e0b;
-  --info:                    #38bdf8;
+  --success:                 #16a34a;  /* green-700 — stronger in light */
+  --warning:                 #d97706;  /* amber-700 — stronger in light */
+  --info:                    #0284c7;  /* sky-600 — stronger in light */
 
-  /* Background layers */
-  --background:              #f8fafc;  /* lightest slate — page bg */
-  --card:                    #ffffff;  /* pure white — cards, panels */
-  --elevated:                #f1f5f9;  /* very light slate — hover, sub-cards */
+  /* ── Background layer hierarchy (clear depth in light) ──
+     page bg → card → muted/sub-card
+     Each step is noticeably darker so nesting is visible.          */
+  --background:              #eef2f7;  /* slate-100ish — page bg tint */
+  --card:                    #ffffff;  /* pure white — primary card surface */
+  --elevated:                #e2e8f2;  /* clearly distinct sub-card / hover */
   --popover:                 #ffffff;
 
-  /* Text */
-  --foreground:              #0f172a;  /* dark navy — primary text */
+  /* Text — strong contrast on white */
+  --foreground:              #0f172a;  /* slate-900 — headings, values */
   --card-foreground:         #0f172a;
   --popover-foreground:      #0f172a;
-  --secondary-foreground:    #1e293b;
+  --secondary-foreground:    #1e293b;  /* slate-800 */
   --accent-foreground:       #1e293b;
-  --muted-foreground:        #64748b;  /* slate-500 — hints, labels */
+  --muted-foreground:        #475569;  /* slate-600 — clearly readable hints */
   --primary-foreground:      #ffffff;
 
-  /* Borders */
-  --border:                  #e2e8f0;  /* slate-200 — card/input borders */
-  --input:                   #ffffff;  /* white input bg */
-  --ring:                    #6366f1;  /* same focus ring as dark */
+  /* Borders — visible against white cards */
+  --border:                  #c8d3e0;  /* slate-300ish — clearly visible */
+  --input:                   #b8c5d6;  /* off-state switch track — visible on any light surface */
+  --ring:                    #6366f1;
 
-  /* Primary = Indigo (same accent as dark) */
+  /* Primary = same indigo accent */
   --primary:                 #6366f1;
 
-  /* Muted surfaces */
-  --secondary:               #f1f5f9;
-  --muted:                   #f1f5f9;
-  --accent:                  #f1f5f9;
+  /* Muted surfaces — clearly distinct from white card */
+  --secondary:               #dde4ef;
+  --muted:                   #dde4ef;  /* noticeably different from #fff */
+  --accent:                  #dde4ef;
 
   /* Destructive */
-  --destructive:             #ef4444;
+  --destructive:             #dc2626;  /* red-600 — stronger in light */
 
   /* Sidebar */
-  --sidebar:                 #ffffff;  /* white sidebar bg */
+  --sidebar:                 #ffffff;
   --sidebar-foreground:      #0f172a;
   --sidebar-primary:         #6366f1;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent:          #f1f5f9;
+  --sidebar-accent:          #dde4ef;
   --sidebar-accent-foreground: #1e293b;
-  --sidebar-border:          #e2e8f0;
+  --sidebar-border:          #c8d3e0;
   --sidebar-ring:            #6366f1;
 
   /* Charts */
   --chart-1:                 #6366f1;
   --chart-2:                 #8b5cf6;
-  --chart-3:                 #22c55e;
-  --chart-4:                 #f59e0b;
-  --chart-5:                 #38bdf8;
+  --chart-3:                 #16a34a;
+  --chart-4:                 #d97706;
+  --chart-5:                 #0284c7;
 }
 
 /* ─────────────────────────────────────────────
