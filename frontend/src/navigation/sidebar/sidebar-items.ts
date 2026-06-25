@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  Settings2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -51,6 +52,18 @@ export const sidebarItems: NavGroup[] = [
         title: "Dashboard",
         url: "/dashboard/default",
         icon: LayoutDashboard,
+      },
+    ],
+  },
+  {
+    id: 2,
+    label: "Configuration",
+    items: [
+      {
+        id: "class-configure",
+        title: "Class Configure",
+        url: "/dashboard/class-configure",
+        icon: Settings2,
       },
     ],
   },

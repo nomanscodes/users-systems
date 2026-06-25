@@ -15,7 +15,7 @@ export function PreviewPanel({ labels }: PreviewPanelProps) {
           <CardTitle className="text-base font-semibold text-foreground">Preview</CardTitle>
           <Badge
             variant="outline"
-            className="border-success/40 bg-success/10 text-success text-xs font-semibold"
+            className="border-success/40 bg-success/10 text-success text-sm font-semibold"
           >
             {count} classroom{count === 1 ? "" : "s"} will be generated
           </Badge>
@@ -29,7 +29,7 @@ export function PreviewPanel({ labels }: PreviewPanelProps) {
             {labels.map((label) => (
               <span
                 key={label}
-                className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground"
+                className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-muted-foreground"
               >
                 {label}
               </span>

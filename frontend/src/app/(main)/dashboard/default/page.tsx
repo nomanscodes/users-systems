@@ -1,8 +1,12 @@
-export default function Page() {
+import { PageContainer } from "@/components/page-container";
+
+export default function DashboardDefaultPage() {
   return (
-    <div className="flex flex-col items-center justify-center h-48 gap-2 text-muted-foreground">
-      <p className="text-lg font-medium">Dashboard</p>
-      <p className="text-sm">Page content coming soon.</p>
-    </div>
+    <PageContainer>
+      <div>
+        <h1 className="ds-page-title">Dashboard</h1>
+        <p className="ds-page-subtitle">Welcome back. Your workspace is ready.</p>
+      </div>
+    </PageContainer>
   );
 }
