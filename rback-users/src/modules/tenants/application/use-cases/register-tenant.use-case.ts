@@ -17,14 +17,10 @@ import type { TenantRepositoryPort } from '../../domain/repositories/tenant.repo
 
 export interface RegisterTenantInput {
   schoolName: string;
-  schoolEmail: string;
-  schoolPhone?: string | null;
   address?: string | null;
-  adminFirstName: string;
-  adminLastName: string;
-  adminEmail: string;
-  adminPassword: string;
-  adminPhone?: string | null;
+  email: string;
+  password: string;
+  phone?: string | null;
 }
 
 @Injectable()
@@ -68,20 +64,17 @@ export class RegisterTenantUseCase {
   ) {
     // ─── 1. Uniqueness checks ───
 
-    const existingByEmail = await this.tenantRepo.findByEmail(
-      input.schoolEmail,
-    );
-    if (existingByEmail)
-      throw new TenantEmailAlreadyExistsError(input.schoolEmail);
+    const existingByEmail = await this.tenantRepo.findByEmail(input.email);
+    if (existingByEmail) throw new TenantEmailAlreadyExistsError(input.email);
 
     const existingUser = await this.dataSource
       .getRepository(UserTypeOrmEntity)
-      .findOneBy({ email: input.adminEmail });
-    if (existingUser) throw new AdminEmailAlreadyExistsError(input.adminEmail);
+      .findOneBy({ email: input.email });
+    if (existingUser) throw new AdminEmailAlreadyExistsError(input.email);
 
     // ─── 2. Hash admin password & Generate Slug ───
     const saltRounds = this.configService.get<number>('BCRYPT_SALT_ROUNDS', 12);
-    const passwordHash = await bcrypt.hash(input.adminPassword, +saltRounds);
+    const passwordHash = await bcrypt.hash(input.password, +saltRounds);
     const generatedSlug = await this.generateUniqueSlug(input.schoolName);
 
     // ─── 3. Atomic transaction: create tenant + school admin ───
@@ -101,8 +94,8 @@ export class RegisterTenantUseCase {
         id: tenantId,
         name: input.schoolName,
         slug: generatedSlug,
-        email: input.schoolEmail,
-        phone: input.schoolPhone ?? null,
+        email: input.email,
+        phone: input.phone ?? null,
         address: input.address ?? null,
         status,
         createdBy: createdBy ?? null,
@@ -115,11 +108,11 @@ export class RegisterTenantUseCase {
       await queryRunner.manager.insert('users', {
         id: adminId,
         tenantId: tenantId,
-        email: input.adminEmail,
+        email: input.email,
         passwordHash,
-        firstName: input.adminFirstName,
-        lastName: input.adminLastName,
-        phone: input.adminPhone ?? null,
+        firstName: input.schoolName,
+        lastName: 'Admin',
+        phone: input.phone ?? null,
         userType: UserType.SCHOOL_ADMIN, // ← always hardcoded by system
         status: UserStatus.ACTIVE,
         createdBy: createdBy ?? null,
@@ -133,8 +126,8 @@ export class RegisterTenantUseCase {
         tenantId,
         input.schoolName,
         generatedSlug,
-        input.schoolEmail,
-        input.schoolPhone ?? null,
+        input.email,
+        input.phone ?? null,
         input.address ?? null,
         status,
         createdBy ?? null,
@@ -146,9 +139,9 @@ export class RegisterTenantUseCase {
         tenant: TenantMapper.toPlainObject(tenant),
         admin: {
           id: adminId,
-          email: input.adminEmail,
-          firstName: input.adminFirstName,
-          lastName: input.adminLastName,
+          email: input.email,
+          firstName: input.schoolName,
+          lastName: 'Admin',
           userType: UserType.SCHOOL_ADMIN,
         },
       };

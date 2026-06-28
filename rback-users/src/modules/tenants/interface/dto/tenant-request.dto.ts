@@ -24,34 +24,17 @@ export class SelfRegisterTenantDto {
   @IsNotEmpty()
   @IsEmail()
   @MaxLength(255)
-  schoolEmail: string;
+  email: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(20)
-  schoolPhone?: string;
+  phone?: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(1000)
   address?: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @MinLength(1)
-  @MaxLength(100)
-  adminFirstName: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @MinLength(1)
-  @MaxLength(100)
-  adminLastName: string;
-
-  @IsNotEmpty()
-  @IsEmail()
-  @MaxLength(255)
-  adminEmail: string;
 
   @IsNotEmpty()
   @IsString()
@@ -62,12 +45,7 @@ export class SelfRegisterTenantDto {
         'Password must be 8–72 characters and contain at least one uppercase letter, one number, and one special character.',
     },
   )
-  adminPassword: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(20)
-  adminPhone?: string;
+  password: string;
 }
 
 /**
