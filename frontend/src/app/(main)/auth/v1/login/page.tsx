@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Eye, EyeOff, GraduationCap, Loader2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLogin } from "@/features/auth/hooks/use-login";
 
 const schema = z.object({
   email: z.string().trim().email("Enter a valid email"),
@@ -28,7 +29,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [showPw, setShowPw] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const { mutate, isPending } = useLogin();
 
   const {
     register,
@@ -41,34 +42,17 @@ export default function LoginPage() {
     defaultValues: { email: "", password: "" },
   });
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = (values: FormValues) => {
     setApiError(null);
-    setSubmitting(true);
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"}/v1/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw data;
+    mutate(values, {
+      onError: (err: any) => {
+        const code = err?.code as LoginErrorCode | undefined;
+        setApiError(
+          (code && ERROR_MAP[code]) || err?.message || "Something went wrong. Please try again.",
+        );
+        resetField("password");
       }
-
-      localStorage.setItem("refresh_token", data.data.refreshToken);
-      localStorage.setItem("auth_user", JSON.stringify(data.data.user));
-      (window as any).__accessToken = data.data.accessToken;
-      router.push("/dashboard/default");
-    } catch (err: any) {
-      const code = err?.code as LoginErrorCode | undefined;
-      setApiError(
-        (code && ERROR_MAP[code]) || err?.message || "Something went wrong. Please try again.",
-      );
-      resetField("password");
-    } finally {
-      setSubmitting(false);
-    }
+    });
   };
 
   return (
@@ -161,8 +145,8 @@ export default function LoginPage() {
             </Field>
 
             <SubmitButton
-              disabled={!isValid || submitting}
-              loading={submitting}
+              disabled={!isValid || isPending}
+              loading={isPending}
               idleLabel="Sign In"
               loadingLabel="Signing in..."
             />

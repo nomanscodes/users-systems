@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Eye, EyeOff, GraduationCap, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRegisterTenant } from "@/features/tenants/hooks/use-register-tenant";
 
 const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]).{8,72}$/;
 
@@ -31,7 +32,6 @@ export default function RegisterPage() {
   const [showPw, setShowPw] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   const {
     register,
@@ -59,32 +59,23 @@ export default function RegisterPage() {
     { label: "Maximum 72 characters", test: (v: string) => v.length <= 72 },
   ];
 
-  const onSubmit = async (values: FormValues) => {
+  const { mutate, isPending } = useRegisterTenant();
+
+  const onSubmit = (values: FormValues) => {
     setApiError(null);
-    setSubmitting(true);
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"}/v1/tenants/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw data;
+    mutate(values, {
+      onSuccess: () => {
+        setIsSuccess(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      },
+      onError: (err: any) => {
+        const code = err?.code as RegisterErrorCode | undefined;
+        setApiError(
+          (code && ERROR_MAP[code]) || err?.message || "Registration failed. Please check your details and try again."
+        );
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
-
-      setIsSuccess(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (err: any) {
-      const code = err?.code as RegisterErrorCode | undefined;
-      setApiError(
-        (code && ERROR_MAP[code]) || err?.message || "Registration failed. Please check your details and try again."
-      );
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } finally {
-      setSubmitting(false);
-    }
+    });
   };
 
   return (
@@ -253,8 +244,8 @@ export default function RegisterPage() {
                 </Field>
 
                 <SubmitButton
-                  disabled={!isValid || submitting}
-                  loading={submitting}
+                  disabled={!isValid || isPending}
+                  loading={isPending}
                   idleLabel="Start Free Trial"
                   loadingLabel="Creating account..."
                 />

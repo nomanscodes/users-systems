@@ -7,6 +7,16 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // ── Enable CORS for frontend communication ──
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:3002',
+    ], // Add frontend ports here
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
   // ── Global exception filter (safety net — runs after domain-specific filters) ──
   app.useGlobalFilters(new GlobalExceptionFilter());
 
