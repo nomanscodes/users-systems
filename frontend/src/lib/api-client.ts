@@ -18,7 +18,11 @@ apiClient.interceptors.request.use(
     const token = typeof window !== 'undefined' ? (window as any).__accessToken : null;
     
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      if (config.headers && typeof config.headers.set === 'function') {
+        config.headers.set('Authorization', `Bearer ${token}`);
+      } else {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -52,19 +56,25 @@ apiClient.interceptors.response.use(
         return new Promise(function(resolve, reject) {
           failedQueue.push({ resolve, reject });
         }).then(token => {
-          originalRequest.headers['Authorization'] = 'Bearer ' + token;
-          return apiClient(originalRequest);
+          const retryConfig = { ...originalRequest };
+          retryConfig.headers = { ...originalRequest.headers, Authorization: `Bearer ${token}` };
+          return apiClient.request(retryConfig);
         }).catch(err => Promise.reject(err));
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
 
+      if (typeof window === 'undefined') {
+        isRefreshing = false;
+        return Promise.reject(error.response?.data || error);
+      }
+
       const refreshToken = localStorage.getItem('refresh_token');
       
       if (!refreshToken) {
         useAuthStore.getState().logout();
-        if (typeof window !== 'undefined' && !window.location.pathname.includes('/auth/v1/login')) {
+        if (!window.location.pathname.includes('/auth/v1/login')) {
           window.location.href = '/auth/v1/login';
         }
         return Promise.reject(error);
@@ -80,9 +90,10 @@ apiClient.interceptors.response.use(
         
         processQueue(null, data.accessToken);
         
-        // Retry the original request
-        originalRequest.headers['Authorization'] = 'Bearer ' + data.accessToken;
-        return apiClient(originalRequest);
+        // Retry the original request safely
+        const retryConfig = { ...originalRequest };
+        retryConfig.headers = { ...originalRequest.headers, Authorization: `Bearer ${data.accessToken}` };
+        return apiClient.request(retryConfig);
       } catch (refreshError) {
         processQueue(refreshError, null);
         useAuthStore.getState().logout();

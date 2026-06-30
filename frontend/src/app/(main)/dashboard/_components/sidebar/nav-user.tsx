@@ -37,8 +37,12 @@ export function NavUser({
       if (refreshToken) {
         await AuthService.logout(refreshToken);
       }
-    } catch (e) {
-      console.error("Logout API failed", e);
+    } catch (e: any) {
+      // If the token is already invalid/expired, we don't need to log an error.
+      // The user is effectively already logged out from the server's perspective.
+      if (e?.code !== "INVALID_REFRESH_TOKEN") {
+        console.error("Logout API failed", e);
+      }
     } finally {
       localStorage.removeItem("refresh_token");
       logout();

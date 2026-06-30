@@ -77,7 +77,8 @@ export class RefreshTokenUseCase {
     });
 
     // ─── 6. Issue new Refresh Token ───
-    const newRawToken = uuidv4() + '.' + uuidv4();
+    const newRecordId = uuidv4();
+    const newRawToken = newRecordId + '.' + uuidv4();
     const saltRounds = this.configService.get<number>('BCRYPT_SALT_ROUNDS', 10);
     const newTokenHash = await bcrypt.hash(newRawToken, +saltRounds);
 
@@ -85,7 +86,7 @@ export class RefreshTokenUseCase {
     expiresAt.setDate(expiresAt.getDate() + 7);
 
     await this.refreshTokenRepo.create({
-      id: uuidv4(),
+      id: newRecordId,
       userId: user.id,
       tokenHash: newTokenHash,
       expiresAt,

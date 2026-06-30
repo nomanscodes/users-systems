@@ -3,6 +3,8 @@
 import { Building2, CalendarDays, GraduationCap, Layers, Users, BookOpen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { PageContainer } from "@/components/page-container";
+
 import { BranchesTab } from "./tabs/branches-tab";
 import { SessionsTab } from "./tabs/sessions-tab";
 import { ClassesTab } from "./tabs/classes-tab";
@@ -33,21 +35,17 @@ export function AcademicConfiguration() {
   const deleteSection = useDeleteSection();
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <header className="mb-8 border-b pb-6">
-        <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          <span>Academic Setup</span>
-          <span className="text-muted-foreground/40">/</span>
-          <span className="text-foreground/70">Configuration</span>
-        </div>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+    <PageContainer>
+      {/* Page header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Academic Configuration
         </h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+        <p className="mt-1 text-muted-foreground">
           Manage the foundational structure of your institution — branches, academic
           sessions, classes, groups, sections, and subjects — all from one place.
         </p>
-      </header>
+      </div>
 
       <Tabs defaultValue="branches" className="space-y-6">
         <div className="overflow-x-auto">
@@ -100,6 +98,6 @@ export function AcademicConfiguration() {
           <SubjectsTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

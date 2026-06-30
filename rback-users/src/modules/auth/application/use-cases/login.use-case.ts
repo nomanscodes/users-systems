@@ -99,7 +99,8 @@ export class LoginUseCase {
     });
 
     // ─── 6. Sign and store Refresh Token ───
-    const rawRefreshToken = uuidv4() + '.' + uuidv4(); // opaque random token
+    const recordId = uuidv4();
+    const rawRefreshToken = recordId + '.' + uuidv4(); // opaque random token
     const saltRounds = this.configService.get<number>('BCRYPT_SALT_ROUNDS', 10);
     const tokenHash = await bcrypt.hash(rawRefreshToken, +saltRounds);
 
@@ -107,7 +108,7 @@ export class LoginUseCase {
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days default
 
     await this.refreshTokenRepo.create({
-      id: uuidv4(),
+      id: recordId,
       userId: user.id,
       tokenHash,
       expiresAt,
