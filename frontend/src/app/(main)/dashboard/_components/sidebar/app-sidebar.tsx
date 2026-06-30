@@ -15,13 +15,12 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { APP_CONFIG } from "@/config/app-config";
-import { rootUser } from "@/data/users";
+import { useAuthStore } from "@/stores/auth.store";
 import { sidebarItems } from "@/navigation/sidebar/sidebar-items";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
-import { SidebarSupportCard } from "./sidebar-support-card";
 
 const _data = {
   navSecondary: [
@@ -68,6 +67,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       isSynced: s.isSynced,
     })),
   );
+  
+  const user = useAuthStore((state) => state.user);
+
+  const navUser = user ? {
+    name: `${user.firstName} ${user.lastName}`,
+    email: user.email,
+    avatar: "",
+    role: user.userType.replace('_', ' ').toLowerCase()
+  } : { name: "Loading...", email: "", avatar: "", role: "" };
 
   const variant = isSynced ? sidebarVariant : props.variant;
   const collapsible = isSynced ? sidebarCollapsible : props.collapsible;
@@ -92,8 +100,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarFooter>
-        <SidebarSupportCard />
-        <NavUser user={rootUser} />
+        <NavUser user={navUser} />
       </SidebarFooter>
     </Sidebar>
   );

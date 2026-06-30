@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { getInitials } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth.store";
+import { AuthService } from "@/features/auth/api/auth.service";
+import { useRouter } from "next/navigation";
 
 export function NavUser({
   user,
@@ -25,6 +28,23 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+  const logout = useAuthStore((state) => state.logout);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      const refreshToken = localStorage.getItem("refresh_token");
+      if (refreshToken) {
+        await AuthService.logout(refreshToken);
+      }
+    } catch (e) {
+      console.error("Logout API failed", e);
+    } finally {
+      localStorage.removeItem("refresh_token");
+      logout();
+      router.push("/auth/v1/login");
+    }
+  };
 
   return (
     <SidebarMenu>
@@ -80,7 +100,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout} className="text-red-500 hover:text-red-600 focus:text-red-600 focus:bg-red-50">
               <LogOut />
               Log out
             </DropdownMenuItem>
