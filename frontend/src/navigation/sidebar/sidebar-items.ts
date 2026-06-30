@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   Settings2,
+  GraduationCap,
   type LucideIcon,
 } from "lucide-react";
 
@@ -64,6 +65,12 @@ export const sidebarItems: NavGroup[] = [
         title: "Class Configure",
         url: "/dashboard/class-configure",
         icon: Settings2,
+      },
+      {
+        id: "academic-setup",
+        title: "Academic Setup",
+        url: "/dashboard/academic-setup",
+        icon: GraduationCap,
       },
     ],
   },
