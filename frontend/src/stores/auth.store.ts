@@ -27,12 +27,14 @@ export const useAuthStore = create<AuthState>()(
         // Expose token globally for non-React contexts (like Axios interceptors)
         if (typeof window !== 'undefined') {
           (window as any).__accessToken = token;
+          document.cookie = "auth_status=true; path=/; max-age=86400"; // 1 day, adjust as needed
         }
         set({ user, accessToken: token, isAuthenticated: true });
       },
       logout: () => {
         if (typeof window !== 'undefined') {
           (window as any).__accessToken = null;
+          document.cookie = "auth_status=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         }
         set({ user: null, accessToken: null, isAuthenticated: false });
       },
