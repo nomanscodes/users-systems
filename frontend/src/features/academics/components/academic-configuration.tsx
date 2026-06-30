@@ -8,11 +8,9 @@ import { PageContainer } from "@/components/page-container";
 import { BranchesTab } from "./tabs/branches-tab";
 import { SessionsTab } from "./tabs/sessions-tab";
 import { ClassesTab } from "./tabs/classes-tab";
-import { SimpleNameTab } from "./tabs/simple-name-tab";
+import { GroupsTab } from "./tabs/groups-tab";
+import { SectionsTab } from "./tabs/sections-tab";
 import { SubjectsTab } from "./tabs/subjects-tab";
-
-import { useGroups, useCreateGroup, useUpdateGroup, useDeleteGroup } from "../hooks/use-groups";
-import { useSections, useCreateSection, useUpdateSection, useDeleteSection } from "../hooks/use-sections";
 
 const tabs = [
   { value: "branches", label: "Branches", icon: Building2 },
@@ -24,15 +22,6 @@ const tabs = [
 ] as const;
 
 export function AcademicConfiguration() {
-  const { data: groups = [], isLoading: loadingGroups } = useGroups();
-  const createGroup = useCreateGroup();
-  const updateGroup = useUpdateGroup();
-  const deleteGroup = useDeleteGroup();
-
-  const { data: sections = [], isLoading: loadingSections } = useSections();
-  const createSection = useCreateSection();
-  const updateSection = useUpdateSection();
-  const deleteSection = useDeleteSection();
 
   return (
     <PageContainer>
@@ -73,26 +62,10 @@ export function AcademicConfiguration() {
           <ClassesTab />
         </TabsContent>
         <TabsContent value="groups" className="mt-0">
-          <SimpleNameTab
-            entityLabel="Group"
-            placeholderExample="Science"
-            items={groups}
-            isLoading={loadingGroups}
-            createMutation={createGroup}
-            updateMutation={updateGroup}
-            deleteMutation={deleteGroup}
-          />
+          <GroupsTab />
         </TabsContent>
         <TabsContent value="sections" className="mt-0">
-          <SimpleNameTab
-            entityLabel="Section"
-            placeholderExample="Section A"
-            items={sections}
-            isLoading={loadingSections}
-            createMutation={createSection}
-            updateMutation={updateSection}
-            deleteMutation={deleteSection}
-          />
+          <SectionsTab />
         </TabsContent>
         <TabsContent value="subjects" className="mt-0">
           <SubjectsTab />
