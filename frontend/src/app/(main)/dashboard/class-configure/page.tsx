@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { defaultConfig, labelsFor, toggleArr, payloadsFor } from "./_components/utils";
 import type { ClassConfig } from "./_components/types";
@@ -19,32 +20,86 @@ import { useSessions } from "@/features/academics/hooks/use-sessions";
 import { useClasses } from "@/features/academics/hooks/use-classes";
 import { useGroups } from "@/features/academics/hooks/use-groups";
 import { useSections } from "@/features/academics/hooks/use-sections";
-import { useCreateBatches } from "@/features/academics/hooks/use-batches";
+import { useBatches, useSyncBatches } from "@/features/academics/hooks/use-batches";
 
 export default function ClassConfigurePage() {
   // Fetch dynamic setup data concurrently
-  const { data: branches = [], isLoading: loadingBranches } = useBranches();
-  const { data: sessions = [], isLoading: loadingSessions } = useSessions();
-  const { data: classes = [], isLoading: loadingClasses } = useClasses();
-  const { data: groups = [], isLoading: loadingGroups } = useGroups();
-  const { data: sections = [], isLoading: loadingSections } = useSections();
+  const { data: branches = [], isLoading: isLoadingBranches } = useBranches();
+  const { data: sessions = [], isLoading: isLoadingSessions } = useSessions();
+  const { data: classes = [], isLoading: isLoadingClasses } = useClasses();
+  const { data: groups = [], isLoading: isLoadingGroups } = useGroups();
+  const { data: sections = [], isLoading: isLoadingSections } = useSections();
+  const { data: existingBatches, isLoading: isLoadingBatches } = useBatches();
 
-  const isLoading = loadingBranches || loadingSessions || loadingClasses || loadingGroups || loadingSections;
+  const isLoading =
+    isLoadingBranches ||
+    isLoadingSessions ||
+    isLoadingClasses ||
+    isLoadingGroups ||
+    isLoadingSections ||
+    isLoadingBatches;
 
-  // Since we load async, let's keep track of selections by ID
+  // Selected scope
   const [branchId, setBranchId] = useState<string>("");
   const [sessionId, setSessionId] = useState<string>("");
 
+  // UI State
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
   const [configs, setConfigs] = useState<Record<string, ClassConfig>>({});
-  const [created, setCreated] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const createBatches = useCreateBatches();
+  const syncBatches = useSyncBatches();
 
   // Default selection when data loads if nothing is selected yet
   if (!isLoading && branches.length > 0 && !branchId) setBranchId(branches[0].id);
   if (!isLoading && sessions.length > 0 && !sessionId) setSessionId(sessions[0].id);
+
+  // Pre-load UI state from DB
+  useEffect(() => {
+    if (isLoadingBatches || !existingBatches) return;
+
+    if (!branchId || !sessionId || existingBatches.length === 0) {
+      if (existingBatches.length === 0) {
+        setSelectedClassIds(prev => prev.length === 0 ? prev : []);
+        setConfigs(prev => Object.keys(prev).length === 0 ? prev : {});
+      }
+      return;
+    }
+
+    // Filter batches for this specific branch/session
+    const active = existingBatches.filter(b => b.branchId === branchId && b.sessionId === sessionId);
+    
+    // Deduplicate class IDs
+    const classIds = Array.from(new Set(active.map(b => b.classId)));
+    setSelectedClassIds(classIds);
+
+    // Build the configuration toggles
+    const newConfigs: Record<string, ClassConfig> = {};
+    for (const cid of classIds) {
+      const clsBatches = active.filter(b => b.classId === cid);
+      
+      const gIds = Array.from(new Set(clsBatches.map(b => b.groupId).filter(Boolean))) as string[];
+      const sIds = Array.from(new Set(clsBatches.map(b => b.sectionId).filter(Boolean))) as string[];
+      
+      newConfigs[cid] = {
+        groupsOn: gIds.length > 0,
+        groupIds: gIds,
+        sectionsOn: sIds.length > 0,
+        sectionIds: sIds
+      };
+    }
+
+    // Only update state if it actually changed to prevent infinite loops
+    setSelectedClassIds(prev => {
+      const isSame = prev.length === classIds.length && prev.every((val, index) => val === classIds[index]);
+      return isSame ? prev : classIds;
+    });
+    
+    setConfigs(prev => {
+      const isSame = JSON.stringify(prev) === JSON.stringify(newConfigs);
+      return isSame ? prev : newConfigs;
+    });
+  }, [branchId, sessionId, existingBatches, isLoadingBatches]);
 
   // Toggle a class on/off and lazily initialise its config
   const handleToggleClass = (classId: string) => {
@@ -80,10 +135,9 @@ export default function ClassConfigurePage() {
 
   const handleGenerate = async () => {
     setIsGenerating(true);
-    setCreated(false);
     
     // Gather all payloads across all selected classes
-    const allPayloads: CreateBatchPayload[] = [];
+    const allPayloads = [];
     for (const cls of orderedSelected) {
       allPayloads.push(
         ...payloadsFor(branchId, sessionId, cls.id, configs[cls.id] ?? defaultConfig())
@@ -91,11 +145,15 @@ export default function ClassConfigurePage() {
     }
     
     try {
-      // Fire ONE bulk request containing all combinations
-      await createBatches.mutateAsync(allPayloads);
-      setCreated(true);
+      // Fire ONE bulk sync request
+      await syncBatches.mutateAsync({
+        branchId,
+        sessionId,
+        batches: allPayloads
+      });
+      toast.success("Classrooms synchronized successfully");
     } catch (error) {
-      console.error("Failed to generate some batches", error);
+      // Error handled by mutation
     } finally {
       setIsGenerating(false);
     }
@@ -162,7 +220,7 @@ export default function ClassConfigurePage() {
         count={allLabels.length}
         disabled={orderedSelected.length === 0 || !branchId || !sessionId}
         loading={isGenerating}
-        created={created}
+        created={false}
         onGenerate={handleGenerate}
       />
     </PageContainer>

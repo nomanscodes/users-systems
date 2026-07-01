@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsUUID, IsOptional } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsUUID,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateBatchDto {
   @IsUUID()
@@ -42,4 +49,19 @@ export class ResolveBatchDto {
   @IsUUID()
   @IsOptional()
   sectionId?: string;
+}
+
+export class SyncBatchesDto {
+  @IsUUID()
+  @IsNotEmpty()
+  branchId: string;
+
+  @IsUUID()
+  @IsNotEmpty()
+  sessionId: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateBatchDto)
+  batches: CreateBatchDto[];
 }

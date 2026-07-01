@@ -33,7 +33,11 @@ import {
   UpdateSectionDto,
 } from '../dto/create-group-section.dto';
 import { CreateSubjectDto, UpdateSubjectDto } from '../dto/create-subject.dto';
-import { CreateBatchDto, ResolveBatchDto } from '../dto/create-batch.dto';
+import {
+  CreateBatchDto,
+  ResolveBatchDto,
+  SyncBatchesDto,
+} from '../dto/create-batch.dto';
 import { CreateSubjectAllocationDto } from '../dto/create-subject-allocation.dto';
 
 /**
@@ -382,6 +386,16 @@ export class AcademicsController {
   ) {
     const data = await this.academicsService.createBatches(user.tenantId, dtos);
     return success(data, `${dtos.length} classroom(s) created successfully.`);
+  }
+
+  @RequirePermission('academics', 'write')
+  @Post('batches/sync')
+  async syncBatches(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: SyncBatchesDto,
+  ) {
+    const data = await this.academicsService.syncBatches(user.tenantId, dto);
+    return success(data, `Classrooms synchronized successfully.`);
   }
 
   @RequirePermission('academics', 'read')

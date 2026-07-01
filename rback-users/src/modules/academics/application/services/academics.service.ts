@@ -41,6 +41,7 @@ import {
 import {
   CreateBatchDto,
   ResolveBatchDto,
+  SyncBatchesDto,
 } from '../../interface/dto/create-batch.dto';
 import { CreateSubjectAllocationDto } from '../../interface/dto/create-subject-allocation.dto';
 
@@ -462,6 +463,69 @@ export class AcademicsService {
       }
       throw error;
     }
+  }
+
+  async syncBatches(tenantId: string, dto: SyncBatchesDto) {
+    const { branchId, sessionId, batches: dtos } = dto;
+
+    // 1. Fetch existing batches for THIS branch and session only
+    const existingBatches = await this.batchRepo.find({
+      where: { tenantId, branchId, sessionId },
+      select: {
+        id: true,
+        classId: true,
+        groupId: true,
+        sectionId: true,
+      },
+    });
+
+    const getSig = (b: {
+      classId: string;
+      groupId?: string | null;
+      sectionId?: string | null;
+    }) => `${b.classId}_${b.groupId || 'null'}_${b.sectionId || 'null'}`;
+
+    // Map signatures to existing IDs so we can delete what is missing
+    const existingMap = new Map(existingBatches.map((b) => [getSig(b), b.id]));
+
+    const incomingSigs = new Set<string>();
+    const toInsert = [];
+
+    // 2. Identify new combinations to insert
+    for (const incomingDto of dtos) {
+      const sig = getSig(incomingDto);
+      incomingSigs.add(sig);
+
+      if (!existingMap.has(sig)) {
+        toInsert.push(this.batchRepo.create({ ...incomingDto, tenantId }));
+      }
+    }
+
+    // 3. Identify combinations to delete (exist in DB but not in incoming payload)
+    const toDeleteIds: string[] = [];
+    for (const [sig, id] of existingMap.entries()) {
+      if (!incomingSigs.has(sig)) {
+        toDeleteIds.push(id);
+      }
+    }
+
+    // 4. Perform insertions
+    if (toInsert.length > 0) {
+      await this.batchRepo.save(toInsert, { chunk: 100 });
+    }
+
+    // 5. Perform safe deletions (if any students/allocations depend on them, this will throw FK error, which is desired to protect data)
+    if (toDeleteIds.length > 0) {
+      try {
+        await this.batchRepo.delete(toDeleteIds);
+      } catch (_) {
+        throw new ConflictException(
+          'Cannot delete some unchecked classrooms because students or teachers are already assigned to them.',
+        );
+      }
+    }
+
+    return { inserted: toInsert.length, deleted: toDeleteIds.length };
   }
 
   async getBatches(tenantId: string) {

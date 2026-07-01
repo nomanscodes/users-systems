@@ -109,10 +109,33 @@ export interface CreateSubjectPayload {
 export type UpdateSubjectPayload = Partial<CreateSubjectPayload>;
 
 // --- Batches ---
+export interface Batch {
+  id: string;
+  branchId: string;
+  sessionId: string;
+  classId: string;
+  groupId: string | null;
+  sectionId: string | null;
+  tenantId: string;
+  branch?: Branch;
+  session?: AcademicSession;
+  classEntity?: ClassEntity;
+  group?: Group;
+  section?: Section;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CreateBatchPayload {
   branchId: string;
   sessionId: string;
   classId: string;
   groupId?: string;
   sectionId?: string;
+}
+
+export interface SyncBatchesPayload {
+  branchId: string;
+  sessionId: string;
+  batches: CreateBatchPayload[];
 }

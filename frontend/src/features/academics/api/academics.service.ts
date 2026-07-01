@@ -18,7 +18,9 @@ import type {
   Subject,
   CreateSubjectPayload,
   UpdateSubjectPayload,
-  CreateBatchPayload
+  Batch,
+  CreateBatchPayload,
+  SyncBatchesPayload
 } from '../types/academics.dto';
 
 // Helper to unwrap backend ApiResponse
@@ -68,5 +70,8 @@ export const AcademicsService = {
   deleteSubject: (id: string) => apiClient.delete(`/v1/academics/subjects/${id}`),
 
   // --- Batches ---
+  getBatches: () => apiClient.get('/v1/academics/batches').then(unwrap<Batch[]>),
   createBatches: (data: CreateBatchPayload[]) => apiClient.post('/v1/academics/batches', data).then(unwrap<any>),
+  syncBatches: (data: SyncBatchesPayload) => apiClient.post('/v1/academics/batches/sync', data).then(unwrap<any>),
+  deleteBatch: (id: string) => apiClient.delete(`/v1/academics/batches/${id}`),
 };
