@@ -39,9 +39,6 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
       <AppSidebar variant={variant} collapsible={collapsible} />
       <SidebarInset
         className={cn(
-          "[html[data-content-layout=centered]_&>*]:mx-auto",
-          "[html[data-content-layout=centered]_&>*]:w-full",
-          "[html[data-content-layout=centered]_&>*]:max-w-screen-2xl",
           "peer-data-[variant=inset]:border",
           "[--dashboard-header-height:--spacing(12)]",
           "min-w-0 overflow-x-clip",  /* clip instead of hidden — doesn't break sticky */
@@ -56,7 +53,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
             "[html[data-navbar-style=sticky]_&]:overflow-hidden [html[data-navbar-style=sticky]_&]:rounded-t-[inherit]",
           )}
         >
-          <div className="flex w-full items-center justify-between px-4 lg:px-6">
+          <div className="flex w-full items-center justify-between px-4 lg:px-6 [html[data-content-layout=centered]_&]:mx-auto [html[data-content-layout=centered]_&]:max-w-screen-2xl">
             <div className="flex flex-1 items-center gap-2 md:gap-4 lg:gap-6">
               <SidebarTrigger className="-ml-1 text-muted-foreground" />
               <div className="flex-1 w-full max-w-xl">
@@ -75,7 +72,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
           </div>
         </header>
         {/* Pages can set data-content-padding="false" to render full-bleed app layouts. */}
-        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden p-4 has-data-[content-padding=false]:p-0 md:p-6 md:has-data-[content-padding=false]:p-0">
+        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden p-4 has-data-[content-padding=false]:p-0 md:p-6 md:has-data-[content-padding=false]:p-0 [html[data-content-layout=centered]_&]:mx-auto [html[data-content-layout=centered]_&]:max-w-screen-2xl w-full">
           {children}
         </div>
       </SidebarInset>
