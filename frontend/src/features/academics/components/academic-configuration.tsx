@@ -26,24 +26,29 @@ export function AcademicConfiguration() {
   return (
     <PageContainer>
       {/* Page header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+      <div className="flex flex-col mb-8">
+        <div className="flex items-center text-[11px] font-bold tracking-widest text-muted-foreground/80 uppercase mb-3">
+          <span>Academic Setup</span>
+          <span className="mx-2 font-light">/</span>
+          <span className="text-foreground/70">Configuration</span>
+        </div>
+        <h1 className="text-[2rem] font-bold tracking-tight text-foreground leading-tight">
           Academic Configuration
         </h1>
-        <p className="mt-1 text-muted-foreground">
+        <p className="mt-2 text-[15px] text-muted-foreground max-w-3xl">
           Manage the foundational structure of your institution — branches, academic
           sessions, classes, groups, sections, and subjects — all from one place.
         </p>
       </div>
 
       <Tabs defaultValue="branches" className="space-y-6">
-        <div className="overflow-x-auto">
-          <TabsList className="h-auto w-full justify-start gap-1 rounded-lg border bg-card p-1">
+        <div className="overflow-x-auto pb-2">
+          <TabsList className="h-auto w-full justify-start gap-1 rounded-xl border border-border/50 bg-card p-1.5 shadow-sm">
             {tabs.map((t) => (
               <TabsTrigger
                 key={t.value}
                 value={t.value}
-                className="gap-2 px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
+                className="gap-2 px-5 py-2.5 rounded-lg font-medium text-muted-foreground transition-all hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
               >
                 <t.icon className="size-4" />
                 {t.label}

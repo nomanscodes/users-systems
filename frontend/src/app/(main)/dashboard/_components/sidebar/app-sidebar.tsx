@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { CircleHelp, ClipboardList, Command, Database, File, Search, Settings } from "lucide-react";
+import { CircleHelp, ClipboardList, Command, Database, File, GraduationCap, Search, Settings } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 
 import {
@@ -85,10 +85,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link prefetch={false} href="/dashboard/default">
-                <Command />
-                <span className="font-semibold text-base">{APP_CONFIG.name}</span>
+            <SidebarMenuButton asChild className="h-14 hover:bg-transparent active:bg-transparent">
+              <Link prefetch={false} href="/dashboard/default" className="flex items-center gap-3 py-4">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <GraduationCap className="size-5" />
+                </div>
+                <div className="flex flex-col gap-0 leading-none">
+                  <span className="font-bold text-lg text-foreground">EduERP</span>
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Academic Suite</span>
+                </div>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

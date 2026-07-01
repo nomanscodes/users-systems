@@ -81,12 +81,10 @@ These serve as the fallback; there is no separate default.css file. */
   --warning:                 #d97706;  /* amber-700 — stronger in light */
   --info:                    #0284c7;  /* sky-600 — stronger in light */
 
-  /* ── Background layer hierarchy (clear depth in light) ──
-     page bg → card → muted/sub-card
-     Each step is noticeably darker so nesting is visible.          */
-  --background:              #eef2f7;  /* slate-100ish — page bg tint */
-  --card:                    #ffffff;  /* pure white — primary card surface */
-  --elevated:                #e2e8f2;  /* clearly distinct sub-card / hover */
+  /* ── Background layer hierarchy (flat aesthetic) ── */
+  --background:              #ffffff;  /* page bg is pure white */
+  --card:                    #ffffff;  /* pure white */
+  --elevated:                #f8fafc;  /* slate-50 */
   --popover:                 #ffffff;
 
   /* Text — strong contrast on white */

@@ -101,36 +101,34 @@ export function BranchesTab() {
         buttonLabel="Add New Branch"
         onAddClick={openCreate}
       />
-      <div className="overflow-hidden rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/40 hover:bg-muted/40">
-              <TableHead>Name</TableHead>
-              <TableHead>Address</TableHead>
-              <TableHead>Contact Number</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <EmptyRow colSpan={4} label="Loading branches..." />
-            ) : filtered.length === 0 ? (
-              <EmptyRow colSpan={4} label="No branches found." />
-            ) : (
-              filtered.map((b) => (
-                <TableRow key={b.id}>
-                  <TableCell className="font-medium">{b.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{b.address || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{b.contactNumber || "—"}</TableCell>
-                  <TableCell>
-                    <RowActions onEdit={() => openEdit(b)} onDelete={() => setToDelete(b)} />
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Address</TableHead>
+            <TableHead>Contact Number</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            <EmptyRow colSpan={4} label="Loading branches..." />
+          ) : filtered.length === 0 ? (
+            <EmptyRow colSpan={4} label="No branches found." />
+          ) : (
+            filtered.map((b) => (
+              <TableRow key={b.id}>
+                <TableCell className="font-medium">{b.name}</TableCell>
+                <TableCell className="text-muted-foreground">{b.address || "—"}</TableCell>
+                <TableCell className="text-muted-foreground">{b.contactNumber || "—"}</TableCell>
+                <TableCell>
+                  <RowActions onEdit={() => openEdit(b)} onDelete={() => setToDelete(b)} />
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
 
       <Dialog open={mode.type !== "closed"} onOpenChange={(o) => !o && close()}>
         <DialogContent>
