@@ -2,6 +2,7 @@ import {
   LayoutDashboard,
   Settings2,
   GraduationCap,
+  BookMarked,
   type LucideIcon,
 } from "lucide-react";
 
@@ -71,6 +72,12 @@ export const sidebarItems: NavGroup[] = [
         title: "Academic Setup",
         url: "/dashboard/academic-setup",
         icon: GraduationCap,
+      },
+      {
+        id: "subject-allocations",
+        title: "Subject Allocations",
+        url: "/dashboard/subject-allocations",
+        icon: BookMarked,
       },
     ],
   },
