@@ -3,9 +3,10 @@ import {
   IsString,
   IsBoolean,
   IsOptional,
-  IsDateString,
+  IsDate,
   MaxLength,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateAcademicSessionDto {
   @IsString()
@@ -13,13 +14,15 @@ export class CreateAcademicSessionDto {
   @MaxLength(100)
   name: string; // e.g., "2026-2027"
 
-  @IsDateString()
+  @IsDate()
+  @Type(() => Date)
   @IsNotEmpty()
-  startDate: string;
+  startDate: Date;
 
-  @IsDateString()
+  @IsDate()
+  @Type(() => Date)
   @IsNotEmpty()
-  endDate: string;
+  endDate: Date;
 
   @IsBoolean()
   @IsOptional()
@@ -32,13 +35,15 @@ export class UpdateAcademicSessionDto {
   @MaxLength(100)
   name?: string;
 
-  @IsDateString()
+  @IsDate()
+  @Type(() => Date)
   @IsOptional()
-  startDate?: string;
+  startDate?: Date;
 
-  @IsDateString()
+  @IsDate()
+  @Type(() => Date)
   @IsOptional()
-  endDate?: string;
+  endDate?: Date;
 
   @IsBoolean()
   @IsOptional()
