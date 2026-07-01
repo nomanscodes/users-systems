@@ -4,6 +4,7 @@ import { Building2, CalendarDays, GraduationCap, Layers, Users, BookOpen } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { PageContainer } from "@/components/page-container";
+import { useQueryTabs } from "@/hooks/use-query-tabs";
 
 import { BranchesTab } from "./tabs/branches-tab";
 import { SessionsTab } from "./tabs/sessions-tab";
@@ -22,6 +23,7 @@ const tabs = [
 ] as const;
 
 export function AcademicConfiguration() {
+  const [activeTab, setActiveTab] = useQueryTabs("branches");
 
   return (
     <PageContainer>
@@ -41,7 +43,7 @@ export function AcademicConfiguration() {
         </p>
       </div>
 
-      <Tabs defaultValue="branches" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="overflow-x-auto pb-2">
           <TabsList className="h-auto w-full justify-start gap-1 rounded-xl border border-border/50 bg-card p-1.5 shadow-sm">
             {tabs.map((t) => (

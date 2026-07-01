@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 import { AcademicConfiguration } from '@/features/academics/components/academic-configuration';
 
 export const metadata: Metadata = {
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
 export default function AcademicSetupPage() {
   return (
     <div>
-      <AcademicConfiguration />
+      <Suspense fallback={<div>Loading configuration...</div>}>
+        <AcademicConfiguration />
+      </Suspense>
     </div>
   );
 }
