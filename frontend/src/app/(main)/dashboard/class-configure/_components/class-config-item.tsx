@@ -1,25 +1,35 @@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { ClassConfig } from "./types";
-import { GROUPS, SECTIONS } from "./constants";
 import { batchesFor, toggleArr } from "./utils";
 import { Pill } from "./pill";
 import { ToggleSwitch } from "./toggle-switch";
+import type { Group, Section } from "@/features/academics/types/academics.dto";
 
 interface ClassConfigItemProps {
-  cls: string;
+  classId: string;
+  className: string;
   config: ClassConfig;
+  groups: Group[];
+  sections: Section[];
   onUpdate: (patch: Partial<ClassConfig>) => void;
 }
 
-export function ClassConfigItem({ cls, config, onUpdate }: ClassConfigItemProps) {
+export function ClassConfigItem({
+  classId,
+  className,
+  config,
+  groups,
+  sections,
+  onUpdate,
+}: ClassConfigItemProps) {
   const batches = batchesFor(config);
 
   return (
     <div className="rounded-xl border border-border bg-background p-5 space-y-4">
       {/* Header row */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">{cls}</h3>
+        <h3 className="text-sm font-semibold text-foreground">{className}</h3>
         <Badge
           variant="outline"
           className="border-primary/40 bg-primary/10 text-primary text-xs font-semibold"
@@ -35,7 +45,7 @@ export function ClassConfigItem({ cls, config, onUpdate }: ClassConfigItemProps)
             Groups / Streams
           </span>
           <ToggleSwitch
-            id={`groups-toggle-${cls}`}
+            id={`groups-toggle-${classId}`}
             checked={config.groupsOn}
             onCheckedChange={(v) => onUpdate({ groupsOn: v })}
             label="This class has groups"
@@ -43,16 +53,17 @@ export function ClassConfigItem({ cls, config, onUpdate }: ClassConfigItemProps)
         </div>
         {config.groupsOn ? (
           <div className="flex flex-wrap gap-2">
-            {GROUPS.map((g) => (
+            {groups.map((g) => (
               <Pill
-                key={g}
-                selected={config.groups.includes(g)}
-                onClick={() => onUpdate({ groups: toggleArr(config.groups, g) })}
+                key={g.id}
+                selected={config.groupIds.includes(g.id)}
+                onClick={() => onUpdate({ groupIds: toggleArr(config.groupIds, g.id) })}
                 showCheck
               >
-                {g}
+                {g.name}
               </Pill>
             ))}
+            {groups.length === 0 && <span className="text-sm text-muted-foreground">No groups found.</span>}
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">No groups — 1 classroom per section</p>
@@ -68,7 +79,7 @@ export function ClassConfigItem({ cls, config, onUpdate }: ClassConfigItemProps)
             Sections
           </span>
           <ToggleSwitch
-            id={`sections-toggle-${cls}`}
+            id={`sections-toggle-${classId}`}
             checked={config.sectionsOn}
             onCheckedChange={(v) => onUpdate({ sectionsOn: v })}
             label="This class has sections"
@@ -76,16 +87,17 @@ export function ClassConfigItem({ cls, config, onUpdate }: ClassConfigItemProps)
         </div>
         {config.sectionsOn ? (
           <div className="flex flex-wrap gap-2">
-            {SECTIONS.map((s) => (
+            {sections.map((s) => (
               <Pill
-                key={s}
-                selected={config.sections.includes(s)}
-                onClick={() => onUpdate({ sections: toggleArr(config.sections, s) })}
+                key={s.id}
+                selected={config.sectionIds.includes(s.id)}
+                onClick={() => onUpdate({ sectionIds: toggleArr(config.sectionIds, s.id) })}
                 showCheck
               >
-                {s}
+                {s.name}
               </Pill>
             ))}
+            {sections.length === 0 && <span className="text-sm text-muted-foreground">No sections found.</span>}
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">No sections — 1 classroom per group</p>

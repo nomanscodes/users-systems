@@ -9,6 +9,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import { AcademicsService } from '../../application/services/academics.service';
 import { JwtAuthGuard } from '../../../../common/guards/jwt-auth.guard';
@@ -375,12 +376,12 @@ export class AcademicsController {
 
   @RequirePermission('academics', 'write')
   @Post('batches')
-  async createBatch(
+  async createBatches(
     @CurrentUser() user: JwtPayload,
-    @Body() dto: CreateBatchDto,
+    @Body(new ParseArrayPipe({ items: CreateBatchDto })) dtos: CreateBatchDto[],
   ) {
-    const data = await this.academicsService.createBatch(user.tenantId, dto);
-    return success(data, 'Batch created successfully.');
+    const data = await this.academicsService.createBatches(user.tenantId, dtos);
+    return success(data, `${dtos.length} classroom(s) created successfully.`);
   }
 
   @RequirePermission('academics', 'read')

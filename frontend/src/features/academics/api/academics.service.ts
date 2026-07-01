@@ -18,6 +18,7 @@ import type {
   Subject,
   CreateSubjectPayload,
   UpdateSubjectPayload,
+  CreateBatchPayload
 } from '../types/academics.dto';
 
 // Helper to unwrap backend ApiResponse
@@ -65,4 +66,7 @@ export const AcademicsService = {
   createSubject: (data: CreateSubjectPayload) => apiClient.post('/v1/academics/subjects', data).then(unwrap<Subject>),
   updateSubject: (id: string, data: UpdateSubjectPayload) => apiClient.patch(`/v1/academics/subjects/${id}`, data).then(unwrap<Subject>),
   deleteSubject: (id: string) => apiClient.delete(`/v1/academics/subjects/${id}`),
+
+  // --- Batches ---
+  createBatches: (data: CreateBatchPayload[]) => apiClient.post('/v1/academics/batches', data).then(unwrap<any>),
 };

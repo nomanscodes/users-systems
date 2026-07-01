@@ -1,17 +1,21 @@
-import { BRANCHES, SESSIONS } from "./constants";
 import { Pill } from "./pill";
 import { SectionCard } from "./section-card";
+import type { Branch, AcademicSession } from "@/features/academics/types/academics.dto";
 
 interface BranchSessionSelectorProps {
-  branch: string;
-  session: string;
-  onBranchChange: (b: string) => void;
-  onSessionChange: (s: string) => void;
+  branches: Branch[];
+  sessions: AcademicSession[];
+  branchId: string;
+  sessionId: string;
+  onBranchChange: (id: string) => void;
+  onSessionChange: (id: string) => void;
 }
 
 export function BranchSessionSelector({
-  branch,
-  session,
+  branches,
+  sessions,
+  branchId,
+  sessionId,
   onBranchChange,
   onSessionChange,
 }: BranchSessionSelectorProps) {
@@ -23,11 +27,12 @@ export function BranchSessionSelector({
             Branch
           </p>
           <div className="flex flex-wrap gap-2">
-            {BRANCHES.map((b) => (
-              <Pill key={b} selected={branch === b} onClick={() => onBranchChange(b)}>
-                {b}
+            {branches.map((b) => (
+              <Pill key={b.id} selected={branchId === b.id} onClick={() => onBranchChange(b.id)}>
+                {b.name}
               </Pill>
             ))}
+            {branches.length === 0 && <span className="text-sm text-muted-foreground">No branches found.</span>}
           </div>
         </div>
 
@@ -36,11 +41,12 @@ export function BranchSessionSelector({
             Session
           </p>
           <div className="flex flex-wrap gap-2">
-            {SESSIONS.map((s) => (
-              <Pill key={s} selected={session === s} onClick={() => onSessionChange(s)}>
-                {s}
+            {sessions.map((s) => (
+              <Pill key={s.id} selected={sessionId === s.id} onClick={() => onSessionChange(s.id)}>
+                {s.name}
               </Pill>
             ))}
+            {sessions.length === 0 && <span className="text-sm text-muted-foreground">No sessions found.</span>}
           </div>
         </div>
       </div>

@@ -9,19 +9,17 @@ export function PreviewPanel({ labels }: PreviewPanelProps) {
   const count = labels.length;
 
   return (
-    <Card className="border-primary/40 bg-card">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold text-foreground">Preview</CardTitle>
-          <Badge
-            variant="outline"
-            className="border-success/40 bg-success/10 text-success text-sm font-semibold"
-          >
-            {count} classroom{count === 1 ? "" : "s"} will be generated
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
+    <div className="overflow-hidden rounded-[0.6rem] border border-border/50 bg-card shadow-xs mb-8">
+      <div className="border-b border-border/50 px-6 py-4 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-foreground">Preview generated batches</h2>
+        <Badge
+          variant="outline"
+          className="border-success/40 bg-success/10 text-success text-sm font-semibold"
+        >
+          {count} classroom{count === 1 ? "" : "s"} will be generated
+        </Badge>
+      </div>
+      <div className="p-6">
         {count === 0 ? (
           <p className="text-sm text-muted-foreground">No classes selected yet.</p>
         ) : (
@@ -36,7 +34,7 @@ export function PreviewPanel({ labels }: PreviewPanelProps) {
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

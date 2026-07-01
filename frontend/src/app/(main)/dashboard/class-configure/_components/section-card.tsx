@@ -9,14 +9,14 @@ interface SectionCardProps {
 
 export function SectionCard({ step, title, hint, children }: SectionCardProps) {
   return (
-    <Card className="border-border bg-card">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-foreground">
+    <div className="overflow-hidden rounded-[0.6rem] border border-border/50 bg-card shadow-xs mb-8">
+      <div className="border-b border-border/50 px-6 py-4 flex flex-col gap-1">
+        <h2 className="text-lg font-semibold text-foreground">
           {step}. {title}
-        </CardTitle>
+        </h2>
         {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
+      </div>
+      <div className="p-6">{children}</div>
+    </div>
   );
 }

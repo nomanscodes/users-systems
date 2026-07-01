@@ -107,3 +107,12 @@ export interface CreateSubjectPayload {
 }
 
 export type UpdateSubjectPayload = Partial<CreateSubjectPayload>;
+
+// --- Batches ---
+export interface CreateBatchPayload {
+  branchId: string;
+  sessionId: string;
+  classId: string;
+  groupId?: string;
+  sectionId?: string;
+}

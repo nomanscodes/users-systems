@@ -1,16 +1,9 @@
 import type { ClassConfig } from "./types";
-import { GROUPS, SECTIONS } from "./constants";
+import type { CreateBatchPayload } from "@/features/academics/types/academics.dto";
 
-export function defaultConfig(cls: string): ClassConfig {
-  if (cls === "Class 9" || cls === "Class 10") {
-    return {
-      groupsOn: true,
-      groups: ["Science", "Commerce"],
-      sectionsOn: true,
-      sections: ["Section A", "Section B"],
-    };
-  }
-  return { groupsOn: false, groups: [], sectionsOn: false, sections: [] };
+export function defaultConfig(): ClassConfig {
+  // By default, groups and sections are off. Users can toggle them on.
+  return { groupsOn: false, groupIds: [], sectionsOn: false, sectionIds: [] };
 }
 
 export function toggleArr<T>(arr: T[], value: T): T[] {
@@ -18,25 +11,58 @@ export function toggleArr<T>(arr: T[], value: T): T[] {
 }
 
 export function batchesFor(cfg: ClassConfig): number {
-  const g = cfg.groupsOn && cfg.groups.length ? cfg.groups.length : 1;
-  const s = cfg.sectionsOn && cfg.sections.length ? cfg.sections.length : 1;
+  const g = cfg.groupsOn && cfg.groupIds.length ? cfg.groupIds.length : 1;
+  const s = cfg.sectionsOn && cfg.sectionIds.length ? cfg.sectionIds.length : 1;
   return g * s;
 }
 
-export function labelsFor(cls: string, cfg: ClassConfig): string[] {
-  const groups =
-    cfg.groupsOn && cfg.groups.length
-      ? [...GROUPS].filter((g) => cfg.groups.includes(g))
+export function labelsFor(
+  classId: string,
+  cfg: ClassConfig,
+  classMap: Record<string, string>,
+  groupMap: Record<string, string>,
+  sectionMap: Record<string, string>
+): string[] {
+  const clsName = classMap[classId] || "Unknown Class";
+
+  const groupNames =
+    cfg.groupsOn && cfg.groupIds.length
+      ? cfg.groupIds.map((id) => groupMap[id]).filter(Boolean)
       : [null];
-  const sections =
-    cfg.sectionsOn && cfg.sections.length
-      ? [...SECTIONS].filter((s) => cfg.sections.includes(s))
+      
+  const sectionNames =
+    cfg.sectionsOn && cfg.sectionIds.length
+      ? cfg.sectionIds.map((id) => sectionMap[id]).filter(Boolean)
       : [null];
 
   const out: string[] = [];
-  for (const g of groups) {
-    for (const s of sections) {
-      out.push([cls, g, s].filter(Boolean).join(" – "));
+  for (const g of groupNames) {
+    for (const s of sectionNames) {
+      out.push([clsName, g, s].filter(Boolean).join(" – "));
+    }
+  }
+  return out;
+}
+
+export function payloadsFor(
+  branchId: string,
+  sessionId: string,
+  classId: string,
+  cfg: ClassConfig
+): CreateBatchPayload[] {
+  const groupIds = cfg.groupsOn && cfg.groupIds.length ? cfg.groupIds : [undefined];
+  const sectionIds = cfg.sectionsOn && cfg.sectionIds.length ? cfg.sectionIds : [undefined];
+
+  const out: CreateBatchPayload[] = [];
+  for (const g of groupIds) {
+    for (const s of sectionIds) {
+      out.push({
+        branchId,
+        sessionId,
+        classId,
+        groupId: g,
+        sectionId: s,
+      });
     }
   }
   return out;

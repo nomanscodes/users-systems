@@ -1,6 +1,6 @@
 export type ClassConfig = {
   groupsOn: boolean;
-  groups: string[];
+  groupIds: string[];
   sectionsOn: boolean;
-  sections: string[];
+  sectionIds: string[];
 };

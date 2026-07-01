@@ -1,14 +1,23 @@
 import type { ClassConfig } from "./types";
 import { SectionCard } from "./section-card";
 import { ClassConfigItem } from "./class-config-item";
+import type { Group, Section, ClassEntity } from "@/features/academics/types/academics.dto";
 
 interface ClassConfigListProps {
-  orderedSelected: string[];
+  orderedSelected: ClassEntity[];
   configs: Record<string, ClassConfig>;
-  onUpdateConfig: (cls: string, patch: Partial<ClassConfig>) => void;
+  groups: Group[];
+  sections: Section[];
+  onUpdateConfig: (classId: string, patch: Partial<ClassConfig>) => void;
 }
 
-export function ClassConfigList({ orderedSelected, configs, onUpdateConfig }: ClassConfigListProps) {
+export function ClassConfigList({ 
+  orderedSelected, 
+  configs, 
+  groups, 
+  sections, 
+  onUpdateConfig 
+}: ClassConfigListProps) {
   return (
     <SectionCard
       step={3}
@@ -21,10 +30,13 @@ export function ClassConfigList({ orderedSelected, configs, onUpdateConfig }: Cl
         <div className="space-y-3">
           {orderedSelected.map((cls) => (
             <ClassConfigItem
-              key={cls}
-              cls={cls}
-              config={configs[cls]}
-              onUpdate={(patch) => onUpdateConfig(cls, patch)}
+              key={cls.id}
+              classId={cls.id}
+              className={cls.name}
+              config={configs[cls.id]}
+              groups={groups}
+              sections={sections}
+              onUpdate={(patch) => onUpdateConfig(cls.id, patch)}
             />
           ))}
         </div>

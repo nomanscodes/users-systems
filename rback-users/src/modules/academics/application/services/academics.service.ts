@@ -412,62 +412,56 @@ export class AcademicsService {
   // BATCHES — GAP-04: parallel existence checks instead of 5 sequential queries
   // =====================================================================
 
-  async createBatch(tenantId: string, dto: CreateBatchDto) {
-    // Fire all existence checks in parallel — skip optional fields when not provided
-    const [branchOk, sessionOk, classOk, sectionOk, groupOk] =
-      await Promise.all([
-        this.branchRepo.existsBy({ id: dto.branchId, tenantId }),
-        this.sessionRepo.existsBy({ id: dto.sessionId, tenantId }),
-        this.classRepo.existsBy({ id: dto.classId, tenantId }),
-        // Only check section if it was actually provided
-        dto.sectionId
-          ? this.sectionRepo.existsBy({ id: dto.sectionId, tenantId })
-          : Promise.resolve(true),
-        // Only check group if it was actually provided
-        dto.groupId
-          ? this.groupRepo.existsBy({ id: dto.groupId, tenantId })
-          : Promise.resolve(true),
-      ]);
-
-    if (!branchOk)
-      throw new NotFoundException(
-        'Branch not found or does not belong to your tenant.',
-      );
-    if (!sessionOk)
-      throw new NotFoundException(
-        'Session not found or does not belong to your tenant.',
-      );
-    if (!classOk)
-      throw new NotFoundException(
-        'Class not found or does not belong to your tenant.',
-      );
-    if (!sectionOk)
-      throw new NotFoundException(
-        'Section not found or does not belong to your tenant.',
-      );
-    if (!groupOk)
-      throw new NotFoundException(
-        'Group not found or does not belong to your tenant.',
-      );
-
-    // Explicit duplicate check using IS NULL — the DB unique index cannot catch
-    // NULL = NULL duplicates in MySQL (NULL ≠ NULL in SQL semantics).
-    const duplicate = await this.batchRepo.findOne({
-      where: {
-        tenantId,
-        branchId: dto.branchId,
-        sessionId: dto.sessionId,
-        classId: dto.classId,
-        groupId: dto.groupId ?? IsNull(),
-        sectionId: dto.sectionId ?? IsNull(),
+  async createBatches(tenantId: string, dtos: CreateBatchDto[]) {
+    // 1. Fetch existing batches to manually check duplicates since MySQL unique indexes
+    // do not catch NULL = NULL duplicates (SQL standard).
+    const existingBatches = await this.batchRepo.find({
+      select: {
+        branchId: true,
+        sessionId: true,
+        classId: true,
+        groupId: true,
+        sectionId: true,
       },
+      where: { tenantId },
     });
-    if (duplicate) {
-      throw new ConflictException('This classroom batch already exists.');
+
+    const getSig = (b: {
+      branchId: string;
+      sessionId: string;
+      classId: string;
+      groupId?: string | null;
+      sectionId?: string | null;
+    }) =>
+      `${b.branchId}_${b.sessionId}_${b.classId}_${b.groupId || 'null'}_${b.sectionId || 'null'}`;
+
+    const existingSigs = new Set(existingBatches.map(getSig));
+    const entitiesToInsert = [];
+
+    // 2. Filter the payload to only new combinations
+    for (const dto of dtos) {
+      const sig = getSig(dto);
+      if (!existingSigs.has(sig)) {
+        existingSigs.add(sig); // Add to set to prevent duplicates within the payload itself
+        entitiesToInsert.push(this.batchRepo.create({ ...dto, tenantId }));
+      }
     }
 
-    const batch = this.batchRepo.create({ ...dto, tenantId });
-    return this.batchRepo.save(batch);
+    if (entitiesToInsert.length === 0) {
+      return []; // All requested combinations already exist
+    }
+
+    try {
+      // 3. Bulk insert using TypeORM save array
+      return await this.batchRepo.save(entitiesToInsert, { chunk: 100 });
+    } catch (error) {
+      if (isDuplicateEntry(error)) {
+        throw new ConflictException(
+          'One or more of these classroom combinations already exist.',
+        );
+      }
+      throw error;
+    }
   }
 
   async getBatches(tenantId: string) {
