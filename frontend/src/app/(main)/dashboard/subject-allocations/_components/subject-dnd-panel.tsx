@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { Search, GripVertical, Filter } from "lucide-react";
+import { Search, GripVertical } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -37,18 +37,15 @@ function DraggableSubjectItem({
     <div
       ref={setNodeRef}
       {...attributes}
+      {...listeners}
       className={cn(
         "flex items-center gap-2.5 rounded-lg border border-border/50 bg-card px-3 py-2.5 transition-all select-none",
         isDragging
           ? "opacity-40 shadow-lg scale-95"
-          : "hover:border-primary/40 hover:shadow-sm cursor-grab active:cursor-grabbing"
+          : "hover:border-primary/40 hover:bg-primary/5 hover:shadow-sm cursor-grab active:cursor-grabbing"
       )}
     >
-      {/* Drag handle */}
-      <span
-        {...listeners}
-        className="shrink-0 text-muted-foreground/40 hover:text-muted-foreground cursor-grab active:cursor-grabbing"
-      >
+      <span className="shrink-0 text-muted-foreground/30">
         <GripVertical className="h-3.5 w-3.5" />
       </span>
 

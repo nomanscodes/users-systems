@@ -5,6 +5,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  pointerWithin,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -56,8 +57,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { useSubjects } from "@/features/academics/hooks/use-subjects";
-import { useClasses } from "@/features/academics/hooks/use-classes";
-import { useGroups } from "@/features/academics/hooks/use-groups";
+import { useBatches } from "@/features/academics/hooks/use-batches";
 import {
   useSubjectAllocations,
   useCreateSubjectAllocation,
@@ -344,8 +344,7 @@ function LoadingSkeleton() {
 
 export default function SubjectAllocationsPage() {
   const { data: subjects = [], isLoading: subjectsLoading } = useSubjects();
-  const { data: classes = [], isLoading: classesLoading } = useClasses();
-  const { data: groups = [], isLoading: groupsLoading } = useGroups();
+  const { data: batches = [], isLoading: batchesLoading } = useBatches();
   const { data: allocations = [], isLoading: allocationsLoading } = useSubjectAllocations();
 
   const createAllocation = useCreateSubjectAllocation();
@@ -357,59 +356,46 @@ export default function SubjectAllocationsPage() {
   const [activeDragSubjectId, setActiveDragSubjectId] = useState<string | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 16,   // must move 16px before drag activates
+      },
+    })
   );
 
   const activeDragSubject = activeDragSubjectId
     ? subjects.find((s) => s.id === activeDragSubjectId) ?? null
     : null;
 
-  const isLoading = subjectsLoading || classesLoading || groupsLoading || allocationsLoading;
+  const isLoading = subjectsLoading || batchesLoading || allocationsLoading;
 
-  // Build the matrix columns from classes + groups
-  // A column exists for every (class, group?) pair that appears in allocations,
-  // OR we derive them from all class/group combinations.
+  // Build matrix columns from BATCHES (deduplicated by classId + groupId).
+  // Sections are completely ignored — subjects differ only by class+group.
   const columns = useMemo<Column[]>(() => {
-    if (classes.length === 0) return [];
+    if (batches.length === 0) return [];
 
-    // Gather all (classId, groupId?) combos from existing allocations
-    const comboSet = new Set<string>();
-    const comboMap: Record<string, { classEntity: ClassEntity; group: Group | null }> = {};
+    const seen = new Set<string>();
+    const uniqueCombos: { colId: string; classEntity: ClassEntity; group: Group | null }[] = [];
 
-    // First add every class with null group (base)
-    for (const cls of classes) {
-      const key = `${cls.id}::none`;
-      comboSet.add(key);
-      comboMap[key] = { classEntity: cls, group: null };
+    for (const batch of batches) {
+      const classEntity = batch.classEntity;
+      if (!classEntity) continue; // skip if relation not loaded
+      const group = batch.group ?? null;
+      const colId = `${batch.classId}::${batch.groupId ?? "none"}`;
+      if (seen.has(colId)) continue; // deduplicate — ignore sectionId
+      seen.add(colId);
+      uniqueCombos.push({ colId, classEntity, group });
     }
 
-    // Then add combos with groups from existing allocations
-    for (const alloc of allocations) {
-      if (alloc.groupId) {
-        const group = groups.find((g) => g.id === alloc.groupId) ?? alloc.group ?? null;
-        const cls = classes.find((c) => c.id === alloc.classId) ?? alloc.classEntity;
-        if (!cls) continue;
-        const key = `${alloc.classId}::${alloc.groupId}`;
-        if (!comboSet.has(key)) {
-          comboSet.add(key);
-          comboMap[key] = { classEntity: cls, group };
-        }
-      }
-    }
-
-    // Build columns with their allocationMap
-    return Array.from(comboSet).map((colId) => {
-      const { classEntity, group } = comboMap[colId];
+    // Attach allocationMap to each column
+    return uniqueCombos.map(({ colId, classEntity, group }) => {
       const allocationMap: Record<string, string> = {};
-
       for (const alloc of allocations) {
-        const allocGroupId = alloc.groupId ?? "none";
-        const allocColId = `${alloc.classId}::${allocGroupId}`;
+        const allocColId = `${alloc.classId}::${alloc.groupId ?? "none"}`;
         if (allocColId === colId) {
           allocationMap[alloc.subjectId] = alloc.id;
         }
       }
-
       return { id: colId, classEntity, group, allocationMap };
     }).sort((a, b) => {
       const aNum = a.classEntity.numericValue ?? 0;
@@ -417,7 +403,7 @@ export default function SubjectAllocationsPage() {
       if (aNum !== bNum) return aNum - bNum;
       return (a.group?.name ?? "").localeCompare(b.group?.name ?? "");
     });
-  }, [classes, groups, allocations]);
+  }, [batches, allocations]);
 
   const stats = useMemo(() => {
     const totalMappings = allocations.length;
@@ -554,9 +540,9 @@ export default function SubjectAllocationsPage() {
               bg: "bg-blue-500/10",
             },
             {
-              label: "Classes",
+              label: "Programs",
               value: columns.length,
-              sub: `${classes.length} class${classes.length !== 1 ? "es" : ""} configured`,
+              sub: `Unique class + group combinations`,
               icon: GraduationCap,
               color: "text-purple-500",
               bg: "bg-purple-500/10",
@@ -634,8 +620,8 @@ export default function SubjectAllocationsPage() {
           </div>
         </div>
 
-        {/* ── Empty state: no subjects or no classes ── */}
-        {(subjects.length === 0 || classes.length === 0) && (
+        {/* ── Empty state ── */}
+        {(subjects.length === 0 || batches.length === 0) && (
           <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border/60 bg-muted/20 py-24 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-background shadow-sm">
               <AlertCircle className="h-5 w-5 text-muted-foreground" />
@@ -644,28 +630,31 @@ export default function SubjectAllocationsPage() {
               <p className="text-sm font-medium text-foreground">
                 {subjects.length === 0
                   ? "No subjects found"
-                  : "No classes found"}
+                  : "No classrooms configured yet"}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Please create{" "}
-                {subjects.length === 0 ? "subjects" : "classes"} in the Academic
-                Setup first.
+                {subjects.length === 0
+                  ? "Please create subjects in Academic Setup first."
+                  : "Please configure classes and groups in Class Configure first. Each configured batch will appear as a column here."}
               </p>
             </div>
           </div>
         )}
 
         {/* ── Matrix Board ── */}
-        {subjects.length > 0 && classes.length > 0 && (
+        {subjects.length > 0 && batches.length > 0 && (
           <DndContext
             sensors={sensors}
+            collisionDetection={pointerWithin}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
             <div className="flex-1 overflow-x-auto pb-6">
-              <div className="flex gap-4 min-w-max">
-                {/* Left subject panel */}
-                <SubjectDndPanel subjects={subjects} />
+              <div className="flex gap-4 min-w-max items-start">
+                {/* Left subject panel — sticky on horizontal scroll */}
+                <div className="sticky left-0 z-20 bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80 rounded-xl">
+                  <SubjectDndPanel subjects={subjects} />
+                </div>
 
                 {/* Columns */}
                 {filteredColumns.map((col) => (
