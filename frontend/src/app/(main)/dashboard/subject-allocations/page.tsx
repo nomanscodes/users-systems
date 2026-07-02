@@ -13,6 +13,7 @@ import {
 } from "@dnd-kit/core";
 import { SubjectDndPanel, subjectColor } from "./_components/subject-dnd-panel";
 import { DroppableColumn } from "./_components/droppable-column";
+import { HeatmapView } from "./_components/heatmap-view";
 import {
   BookOpen,
   GraduationCap,
@@ -641,8 +642,13 @@ export default function SubjectAllocationsPage() {
           </div>
         )}
 
+        {/* ── Heatmap View ── */}
+        {view === "heatmap" && subjects.length > 0 && columns.length > 0 && (
+          <HeatmapView subjects={subjects} columns={columns} />
+        )}
+
         {/* ── Matrix Board ── */}
-        {subjects.length > 0 && batches.length > 0 && (
+        {view === "matrix" && subjects.length > 0 && batches.length > 0 && (
           <DndContext
             sensors={sensors}
             collisionDetection={pointerWithin}
