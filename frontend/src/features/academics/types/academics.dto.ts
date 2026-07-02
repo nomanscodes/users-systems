@@ -139,3 +139,23 @@ export interface SyncBatchesPayload {
   sessionId: string;
   batches: CreateBatchPayload[];
 }
+
+// --- Subject Allocations ---
+export interface SubjectAllocation {
+  id: string;
+  tenantId: string;
+  classId: string;
+  groupId: string | null;
+  subjectId: string;
+  classEntity?: ClassEntity;
+  group?: Group | null;
+  subject?: Subject;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSubjectAllocationPayload {
+  classId: string;
+  groupId?: string | null;
+  subjectId: string;
+}

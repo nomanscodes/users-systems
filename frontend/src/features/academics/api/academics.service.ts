@@ -20,7 +20,9 @@ import type {
   UpdateSubjectPayload,
   Batch,
   CreateBatchPayload,
-  SyncBatchesPayload
+  SyncBatchesPayload,
+  SubjectAllocation,
+  CreateSubjectAllocationPayload,
 } from '../types/academics.dto';
 
 // Helper to unwrap backend ApiResponse
@@ -74,4 +76,9 @@ export const AcademicsService = {
   createBatches: (data: CreateBatchPayload[]) => apiClient.post('/v1/academics/batches', data).then(unwrap<any>),
   syncBatches: (data: SyncBatchesPayload) => apiClient.post('/v1/academics/batches/sync', data).then(unwrap<any>),
   deleteBatch: (id: string) => apiClient.delete(`/v1/academics/batches/${id}`),
+
+  // --- Subject Allocations ---
+  getSubjectAllocations: () => apiClient.get('/v1/academics/subject-allocations').then(unwrap<SubjectAllocation[]>),
+  createSubjectAllocation: (data: CreateSubjectAllocationPayload) => apiClient.post('/v1/academics/subject-allocations', data).then(unwrap<SubjectAllocation>),
+  deleteSubjectAllocation: (id: string) => apiClient.delete(`/v1/academics/subject-allocations/${id}`),
 };
