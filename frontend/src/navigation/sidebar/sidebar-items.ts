@@ -3,6 +3,9 @@ import {
   Settings2,
   GraduationCap,
   BookMarked,
+  Users,
+  Briefcase,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 
@@ -78,6 +81,36 @@ export const sidebarItems: NavGroup[] = [
         title: "Subject Allocations",
         url: "/dashboard/subject-allocations",
         icon: BookMarked,
+      },
+    ],
+  },
+  {
+    id: 3,
+    label: "People",
+    items: [
+      {
+        id: "staff-directory",
+        title: "Staff Directory",
+        url: "/dashboard/staff",
+        icon: Users,
+      },
+      {
+        id: "designations",
+        title: "Designations",
+        url: "/dashboard/staff/designations",
+        icon: Briefcase,
+      },
+    ],
+  },
+  {
+    id: 4,
+    label: "Access Control",
+    items: [
+      {
+        id: "roles",
+        title: "Roles & Permissions",
+        url: "/dashboard/roles",
+        icon: ShieldCheck,
       },
     ],
   },

@@ -22,6 +22,8 @@ Before building any UI, the developer must understand these backend rules:
 9. **Permissions on system roles CAN be modified.** The backend service intentionally allows adding/removing permissions on system roles (comment in `roles.service.ts`). Only `name` and `description` edits are blocked for system roles.
 10. **`GET /roles` list does NOT return `permissions[]`.** The list endpoint returns bare role objects. Only `GET /roles/:id` (detail) returns the full `rolePermissions` array. Plan your data fetching accordingly.
 11. **Teaching assignments require `TEACHING` designation — enforced on the backend.** If the frontend accidentally allows a non-TEACHING staff member to reach the assignment form, the backend will return a `ConflictException`. Always filter the UI.
+12. **⚠️ Staff roles endpoints are NOT yet implemented.** `GET/POST/DELETE /staff/:id/roles` are explicitly marked as pending tasks in `phase-0.4a-implementation-plan.md`. The Roles tab in Staff Detail Drawer must be a placeholder.
+13. **`UserStatus` has 3 values:** `ACTIVE`, `INACTIVE`, `SUSPENDED`. Not just 2. The frontend filter and status badge must handle all three.
 
 ---
 
@@ -326,16 +328,10 @@ Editable via `PATCH /api/v1/staff/:id` with `UpdateStaffProfileDto`:
 
 > **Note:** `UpdateStaffProfileDto` accepts: `designationId?`, `department?`, `joiningDate?`, `qualification?`, `subjectSpecialty?`. It does NOT include `employeeId` or `salary`. To update `employeeId` a future endpoint or backend DTO update is needed.
 
----
-
-**Tab 2: Roles**
-
-- Fetch current roles from: `GET /api/v1/staff/:id/roles`
-- Display each role as a chip with an "×" remove button.
-- Remove: `DELETE /api/v1/staff/:id/roles/:roleId`
-  - If removing the last role, show confirmation warning: "This staff member will have no access to the system."
-- "Assign Role" button → dropdown of all roles (from `GET /api/v1/roles`), already-assigned ones greyed out.
-- Assign: `POST /api/v1/staff/:id/roles` with `{ roleIds: ["uuid"] }`
+--- **Tab 2: Roles** ⚠️ **PLACEHOLDER — Backend Not Implemented Yet**
+  - `GET /api/v1/staff/:id/roles`, `POST /api/v1/staff/:id/roles`, `DELETE /api/v1/staff/:id/roles/:roleId` **do not exist** in the current backend. These are pending tasks.
+  - Render the Roles tab as a read-only notice: "Individual role management is coming soon. Roles are currently set during staff invite."
+  - Do NOT call any API from this tab yet.
 
 ---
 
@@ -353,15 +349,17 @@ Editable via `PATCH /api/v1/staff/:id` with `UpdateStaffProfileDto`:
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | Subject | dropdown | yes | From `GET /api/v1/academics/subjects` |
-| Class | dropdown (cascading) | yes | From batches data — show class name |
-| Group | dropdown (cascading) | yes | Filtered by selected class |
-| Section | dropdown (cascading) | yes | Filtered by class + group |
+| Class | dropdown (cascading) | yes | Extracted from batches list (`useBatches()`), unique by `classId` |
+| Group | dropdown (cascading) | conditional | Filter batches by classId. **`groupId` is nullable** — skip dropdown if all matching batches have no group |
+| Section | dropdown (cascading) | conditional | Filter batches by classId + groupId. **`sectionId` is nullable** — skip if no section |
 
-The Class/Group/Section cascade is done client-side by fetching `GET /api/v1/academics/batches` and filtering, exactly like the Class Configure page does. The final selection resolves to a `batchId`.
+The Class/Group/Section cascade is done client-side by fetching `GET /api/v1/academics/batches`. The final resolved `batchId` is the batch matching the full combination.
+
+Note: `batches/:batchId/teachers` route is at `GET /api/v1/staff/batches/:batchId/teachers` (Staff controller, NOT academics controller).
 
 Submit: `POST /api/v1/staff/:id/assignments` with `{ batchId, subjectId }`
 
-**Duplicate assignment handling:** The backend will return a 409 error if the same teacher-batch-subject combination already exists. Show toast: "This assignment already exists."
+**Duplicate assignment handling:** Backend returns `409 ConflictException`. Show toast: `"This teacher is already assigned to this subject in this batch."`
 
 ---
 
@@ -391,11 +389,14 @@ Create in `src/features/staff/types/`:
 
 ```ts
 type DesignationCategory = 'TEACHING' | 'NON_TEACHING' | 'ADMIN'
+type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED'  // ← 3 values, not 2
 
 interface Designation {
   id: string
   title: string
   category: DesignationCategory
+  createdAt: string
+  updatedAt: string
 }
 
 interface StaffProfile {
@@ -422,12 +423,12 @@ interface StaffMember {
     email: string
     firstName: string
     lastName: string
-    status: 'ACTIVE' | 'INACTIVE'  // backend uses status enum, not isActive boolean
+    status: UserStatus    // 'ACTIVE' | 'INACTIVE' | 'SUSPENDED'
     phone: string | null
   }
   staffProfile: StaffProfile
-  // Note: roles[] is NOT included in GET /staff or GET /staff/:id responses.
-  // Must be fetched separately via GET /staff/:id/roles
+  // Note: roles[] is NOT in GET /staff or GET /staff/:id.
+  // Staff roles endpoints are NOT YET IMPLEMENTED in the backend.
 }
 
 // Returned by GET /staff/:id/roles
@@ -456,7 +457,7 @@ interface TeacherAssignment {
   subject: {
     id: string
     name: string
-    code: string | null
+    code: string | null  // ← nullable in SubjectTypeOrmEntity
   }
 }
 ```
