@@ -138,8 +138,8 @@ export function InviteStaffDrawer({ open, onClose, onSuccess }: InviteStaffDrawe
 
   return (
     <Sheet open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
-      <SheetContent className="w-full sm:max-w-lg flex flex-col" side="right">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-lg flex flex-col p-0 overflow-hidden" side="right">
+        <SheetHeader className="px-6 pt-6 pb-4 shrink-0">
           <SheetTitle>Invite Staff Member</SheetTitle>
           <SheetDescription>
             Add a new staff member to your school. They will receive a temporary password.
@@ -147,11 +147,11 @@ export function InviteStaffDrawer({ open, onClose, onSuccess }: InviteStaffDrawe
         </SheetHeader>
 
         {/* Step Indicator */}
-        <div className="flex items-center gap-2 py-4 border-b">
+        <div className="flex items-center px-6 py-3 border-b border-t shrink-0">
           {STEPS.map((s, i) => (
-            <div key={s.step} className="flex items-center gap-2">
+            <div key={s.step} className="flex items-center min-w-0">
               <div
-                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
+                className={`w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
                   currentStep === s.step
                     ? 'bg-primary text-primary-foreground'
                     : currentStep > s.step
@@ -162,21 +162,21 @@ export function InviteStaffDrawer({ open, onClose, onSuccess }: InviteStaffDrawe
                 {currentStep > s.step ? <CheckCircle2 className="w-3.5 h-3.5" /> : s.step}
               </div>
               <span
-                className={`text-xs ${
+                className={`ml-2 text-xs whitespace-nowrap ${
                   currentStep === s.step ? 'font-medium' : 'text-muted-foreground'
                 }`}
               >
                 {s.label}
               </span>
               {i < STEPS.length - 1 && (
-                <div className="w-8 h-px bg-border mx-1" />
+                <div className="w-6 shrink-0 h-px bg-border mx-3" />
               )}
             </div>
           ))}
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto py-4 space-y-4">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
           {/* ─ Step 1: Personal Details ─ */}
           {currentStep === 1 && (
             <>
@@ -296,7 +296,7 @@ export function InviteStaffDrawer({ open, onClose, onSuccess }: InviteStaffDrawe
         </div>
 
         {/* Footer */}
-        <div className="border-t pt-4 flex justify-between">
+        <div className="border-t px-6 py-4 flex justify-between shrink-0">
           <Button variant="ghost" onClick={currentStep === 1 ? handleClose : handleBack}>
             {currentStep === 1 ? 'Cancel' : 'Back'}
           </Button>

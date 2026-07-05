@@ -7,37 +7,37 @@ import type {
   AssignPermissionsPayload,
 } from '../types/rbac.dto';
 
-// Unwraps the backend { data: T } ApiResponse envelope
-const unwrap = <T>(response: any): T => response.data;
+// NOTE: The Roles & Permissions controller uses plain `return` (no success() wrapper).
+// So apiClient already delivers the raw data — NO unwrap needed here.
+// Compare: Staff controller uses `res.json(success(data))` → { success, message, data }
+//          Roles controller uses `return this.service.method()` → raw array/object
 
 export const RbacService = {
   // ─── Permissions (Read-only — seeded on boot, never mutated) ───────────────
   getAllPermissions: (): Promise<Permission[]> =>
-    apiClient.get('/v1/permissions').then(unwrap<Permission[]>),
+    apiClient.get('/v1/permissions'),
 
   // ─── Roles CRUD ────────────────────────────────────────────────────────────
   // NOTE: getRoles returns bare Role[] with NO rolePermissions array.
   //       getRole(id) returns Role WITH rolePermissions[] populated.
   getRoles: (): Promise<Role[]> =>
-    apiClient.get('/v1/roles').then(unwrap<Role[]>),
+    apiClient.get('/v1/roles'),
 
   getRole: (id: string): Promise<Role> =>
-    apiClient.get(`/v1/roles/${id}`).then(unwrap<Role>),
+    apiClient.get(`/v1/roles/${id}`),
 
   createRole: (data: CreateRolePayload): Promise<Role> =>
-    apiClient.post('/v1/roles', data).then(unwrap<Role>),
+    apiClient.post('/v1/roles', data),
 
   updateRole: (id: string, data: UpdateRolePayload): Promise<Role> =>
-    apiClient.patch(`/v1/roles/${id}`, data).then(unwrap<Role>),
+    apiClient.patch(`/v1/roles/${id}`, data),
 
   deleteRole: (id: string): Promise<void> =>
     apiClient.delete(`/v1/roles/${id}`),
 
   // ─── Role ↔ Permission assignment ──────────────────────────────────────────
-  // NOTE: Assigning permissions to system roles IS allowed by the backend.
-  //       Only editing name/description and deleting system roles is blocked.
   assignPermissions: (roleId: string, data: AssignPermissionsPayload): Promise<Role> =>
-    apiClient.post(`/v1/roles/${roleId}/permissions`, data).then(unwrap<Role>),
+    apiClient.post(`/v1/roles/${roleId}/permissions`, data),
 
   removePermission: (roleId: string, permissionId: string): Promise<void> =>
     apiClient.delete(`/v1/roles/${roleId}/permissions/${permissionId}`),
