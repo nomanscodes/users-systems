@@ -5,17 +5,10 @@ import { Pencil, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useUpdateStaff } from '@/features/staff/hooks/use-staff';
 import { useDesignations } from '@/features/staff/hooks/use-designations';
 import { useAuthStore } from '@/stores/auth.store';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import type { StaffMember } from '@/features/staff/types/staff.dto';
 
 interface ProfileTabProps {
@@ -45,15 +38,15 @@ export function ProfileTab({ staffMember }: ProfileTabProps) {
   const { data: designations } = useDesignations();
   const updateStaff = useUpdateStaff();
 
-  const p = staffMember.staffProfile;
+  // Flat shape — StaffMember IS the staffProfile entity
   const u = staffMember.user;
 
   const startEdit = () => {
-    setDesignationId(p.designationId);
-    setDepartment(p.department ?? '');
-    setJoiningDate(p.joiningDate ?? '');
-    setQualification(p.qualification ?? '');
-    setSubjectSpecialty(p.subjectSpecialty ?? '');
+    setDesignationId(staffMember.designationId);
+    setDepartment(staffMember.department ?? '');
+    setJoiningDate(staffMember.joiningDate ?? '');
+    setQualification(staffMember.qualification ?? '');
+    setSubjectSpecialty(staffMember.subjectSpecialty ?? '');
     setEditMode(true);
   };
 
@@ -77,16 +70,13 @@ export function ProfileTab({ staffMember }: ProfileTabProps) {
       <form onSubmit={handleSave} className="space-y-5">
         <div className="space-y-1.5">
           <Label>Designation</Label>
-          <Select value={designationId} onValueChange={setDesignationId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select designation" />
-            </SelectTrigger>
-            <SelectContent>
-              {designations?.map((d) => (
-                <SelectItem key={d.id} value={d.id}>{d.title}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            value={designationId}
+            onValueChange={setDesignationId}
+            options={designations?.map((d) => ({ value: d.id, label: d.title, description: d.category })) ?? []}
+            placeholder="Select designation"
+            searchPlaceholder="Search designations..."
+          />
         </div>
 
         <div className="space-y-1.5">
@@ -146,18 +136,18 @@ export function ProfileTab({ staffMember }: ProfileTabProps) {
           />
         </div>
         <InfoRow label="Phone" value={u.phone ?? null} />
-        <InfoRow label="Employee ID" value={p.employeeId} />
+        <InfoRow label="Employee ID" value={staffMember.employeeId} />
 
         {/* Editable profile fields */}
         <div className="col-span-2 border-t my-1" />
-        <InfoRow label="Designation" value={p.designation.title} />
-        <InfoRow label="Category" value={p.designation.category} />
-        <InfoRow label="Department" value={p.department} />
-        <InfoRow label="Joining Date" value={p.joiningDate} />
-        <InfoRow label="Qualification" value={p.qualification} />
-        <InfoRow label="Subject Specialty" value={p.subjectSpecialty} />
+        <InfoRow label="Designation" value={staffMember.designation?.title} />
+        <InfoRow label="Category" value={staffMember.designation?.category} />
+        <InfoRow label="Department" value={staffMember.department} />
+        <InfoRow label="Joining Date" value={staffMember.joiningDate} />
+        <InfoRow label="Qualification" value={staffMember.qualification} />
+        <InfoRow label="Subject Specialty" value={staffMember.subjectSpecialty} />
 
-        {/* Salary — SCHOOL_ADMIN only, completely hidden from STAFF */}
+        {/* Salary — SCHOOL_ADMIN only */}
         {isSchoolAdmin && (
           <>
             <div className="col-span-2 border-t my-1" />
@@ -165,8 +155,8 @@ export function ProfileTab({ staffMember }: ProfileTabProps) {
               <InfoRow
                 label="Salary"
                 value={
-                  p.salary != null
-                    ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'BDT' }).format(p.salary)
+                  staffMember.salary != null
+                    ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'BDT' }).format(staffMember.salary)
                     : null
                 }
               />

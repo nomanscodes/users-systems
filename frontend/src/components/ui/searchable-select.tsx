@@ -19,13 +19,15 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-interface Option {
+export interface SearchableSelectOption {
   value: string;
   label: string;
+  /** Optional secondary line shown below the label */
+  description?: string;
 }
 
 interface SearchableSelectProps {
-  options: Option[];
+  options: SearchableSelectOption[];
   value: string;
   onValueChange: (value: string) => void;
   placeholder?: string;
@@ -69,9 +71,15 @@ export function SearchableSelect({
           <ChevronDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-md rounded-lg border border-border" align="start">
+      <PopoverContent
+        className="w-[--radix-popover-trigger-width] p-0 shadow-md rounded-lg border border-border"
+        align="start"
+      >
         <Command>
-          <CommandInput placeholder={searchPlaceholder} className="border-none focus:ring-0" />
+          <CommandInput
+            placeholder={searchPlaceholder}
+            className="border-none focus:ring-0"
+          />
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
@@ -83,15 +91,22 @@ export function SearchableSelect({
                     onValueChange(option.value);
                     setOpen(false);
                   }}
-                  className="cursor-pointer flex items-center justify-between rounded-md px-2 py-1.5 text-sm"
+                  className="cursor-pointer flex items-center gap-2 rounded-md px-2 py-1.5 text-sm"
                 >
-                  <span className="truncate">{option.label}</span>
                   <CheckIcon
                     className={cn(
-                      "ml-2 size-4 shrink-0",
+                      "size-4 shrink-0 text-primary",
                       value === option.value ? "opacity-100" : "opacity-0"
                     )}
                   />
+                  <div className="flex min-w-0 flex-col">
+                    <span className="truncate font-medium">{option.label}</span>
+                    {option.description && (
+                      <span className="text-xs text-muted-foreground truncate">
+                        {option.description}
+                      </span>
+                    )}
+                  </div>
                 </CommandItem>
               ))}
             </CommandGroup>

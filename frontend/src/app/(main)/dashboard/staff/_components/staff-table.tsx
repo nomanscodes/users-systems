@@ -109,8 +109,8 @@ export function StaffTable({ staff, isLoading, isError, filter, searchQuery, onS
         <tbody className="divide-y">
           {filtered.map((member) => {
             const fullName = `${member.user.firstName} ${member.user.lastName}`;
-            const catCfg = CATEGORY_CONFIG[member.staffProfile.designation.category];
-            const statusCfg = STATUS_CONFIG[member.user.status];
+            const catCfg = CATEGORY_CONFIG[member.designation?.category] ?? CATEGORY_CONFIG.TEACHING;
+            const statusCfg = STATUS_CONFIG[member.user.status] ?? STATUS_CONFIG.ACTIVE;
 
             return (
               <tr
@@ -120,7 +120,7 @@ export function StaffTable({ staff, isLoading, isError, filter, searchQuery, onS
               >
                 <td className="px-4 py-3 font-medium">{fullName}</td>
                 <td className="px-4 py-3 text-muted-foreground">{member.user.email}</td>
-                <td className="px-4 py-3">{member.staffProfile.designation.title}</td>
+                <td className="px-4 py-3">{member.designation?.title ?? '—'}</td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${catCfg.className}`}>
                     {catCfg.label}

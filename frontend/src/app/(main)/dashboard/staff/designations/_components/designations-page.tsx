@@ -1,193 +1,266 @@
 'use client';
 
 import { useState } from 'react';
-import { Briefcase, Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { useDesignations, useDeleteDesignation } from '@/features/staff/hooks/use-designations';
-import type { Designation } from '@/features/staff/types/staff.dto';
-import { DesignationForm } from './designation-form';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { PageContainer } from '@/components/page-container';
+import { TabHeader } from '@/features/academics/components/shared/tab-header';
+import { RowActions } from '@/features/academics/components/shared/row-actions';
+import { EmptyRow } from '@/features/academics/components/shared/empty-row';
+import { DeleteConfirm } from '@/features/academics/components/shared/delete-confirm';
+import {
+  useDesignations,
+  useCreateDesignation,
+  useUpdateDesignation,
+  useDeleteDesignation,
+} from '@/features/staff/hooks/use-designations';
+import type { Designation, DesignationCategory } from '@/features/staff/types/staff.dto';
 
-const CATEGORY_CONFIG = {
-  TEACHING: { label: 'Teaching', className: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400' },
-  NON_TEACHING: { label: 'Non-Teaching', className: 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400' },
-  ADMIN: { label: 'Admin', className: 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400' },
-} as const;
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type DialogMode =
+  | { type: 'closed' }
+  | { type: 'create' }
+  | { type: 'edit'; item: Designation };
+
+const EMPTY_FORM = { title: '', category: 'TEACHING' as DesignationCategory };
+
+const CATEGORY_OPTIONS: SearchableSelectOption[] = [
+  { value: 'TEACHING',     label: 'Teaching',     description: 'Teachers assigned to batches & subjects' },
+  { value: 'NON_TEACHING', label: 'Non-Teaching', description: 'Support staff not assigned to classes' },
+  { value: 'ADMIN',        label: 'Admin',         description: 'Administrative and management roles' },
+];
+
+const CATEGORY_BADGE: Record<DesignationCategory, string> = {
+  TEACHING:
+    'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400',
+  NON_TEACHING:
+    'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400',
+  ADMIN:
+    'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400',
+};
+
+const CATEGORY_LABEL: Record<DesignationCategory, string> = {
+  TEACHING: 'Teaching',
+  NON_TEACHING: 'Non-Teaching',
+  ADMIN: 'Admin',
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function DesignationsPageClient() {
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingDesignation, setEditingDesignation] = useState<Designation | null>(null);
+  const { data: items = [], isLoading } = useDesignations();
+  const createMutation = useCreateDesignation();
+  const updateMutation = useUpdateDesignation();
+  const deleteMutation = useDeleteDesignation();
 
-  const { data: designations, isLoading, isError } = useDesignations();
-  const deleteDesignation = useDeleteDesignation();
+  const [search, setSearch] = useState('');
+  const [mode, setMode] = useState<DialogMode>({ type: 'closed' });
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [titleError, setTitleError] = useState('');
+  const [toDelete, setToDelete] = useState<Designation | null>(null);
+
+  const filtered = items.filter((d) =>
+    d.title.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const openCreate = () => {
+    setForm(EMPTY_FORM);
+    setTitleError('');
+    setMode({ type: 'create' });
+  };
+
+  const openEdit = (item: Designation) => {
+    setForm({ title: item.title, category: item.category });
+    setTitleError('');
+    setMode({ type: 'edit', item });
+  };
+
+  const close = () => {
+    setMode({ type: 'closed' });
+    setTitleError('');
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTitleError('');
+    if (!form.title.trim()) {
+      setTitleError('Title is required.');
+      return;
+    }
+
+    try {
+      if (mode.type === 'edit') {
+        await updateMutation.mutateAsync({ id: mode.item.id, data: form });
+      } else {
+        await createMutation.mutateAsync(form);
+      }
+      close();
+    } catch (err: any) {
+      const status = err?.statusCode ?? err?.status;
+      if (status === 409 || String(err?.message).toLowerCase().includes('already exists')) {
+        setTitleError('A designation with this title already exists.');
+      } else {
+        setTitleError('Failed to save. Please try again.');
+      }
+    }
+  };
+
+  const isEdit = mode.type === 'edit';
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="flex flex-col gap-6">
+    <PageContainer>
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-            <Briefcase className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight">Designations</h1>
-            <p className="text-sm text-muted-foreground">
-              Define job titles and categories for your staff.
-            </p>
-          </div>
+      <div className="flex flex-col mb-8">
+        <div className="flex items-center text-[11px] font-bold tracking-widest text-muted-foreground/80 uppercase mb-3">
+          <span>People</span>
+          <span className="mx-2 font-light">/</span>
+          <span className="text-foreground/70">Designations</span>
         </div>
-        <Button onClick={() => setShowCreateForm(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Add Designation
-        </Button>
+        <h1 className="text-[2rem] font-bold tracking-tight text-foreground leading-tight">
+          Designations
+        </h1>
+        <p className="mt-2 text-[15px] text-muted-foreground max-w-2xl">
+          Define job titles and categories for your staff. Designations are used during
+          staff invite and control access to teaching assignments.
+        </p>
       </div>
 
-      {/* Create Form */}
-      {showCreateForm && (
-        <DesignationForm
-          mode="create"
-          onCancel={() => setShowCreateForm(false)}
-          onSuccess={() => setShowCreateForm(false)}
+      <div className="space-y-4">
+        {/* Search + Add button */}
+        <TabHeader
+          search={search}
+          setSearch={setSearch}
+          placeholder="Search designations..."
+          buttonLabel="Add Designation"
+          onAddClick={openCreate}
         />
-      )}
 
-      {/* Loading */}
-      {isLoading && (
-        <div className="rounded-xl border divide-y">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 px-4 py-3">
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-5 w-20 rounded-full" />
-              <div className="ml-auto flex gap-2">
-                <Skeleton className="h-8 w-8 rounded-md" />
-                <Skeleton className="h-8 w-8 rounded-md" />
-              </div>
+        {/* Table */}
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <EmptyRow colSpan={3} label="Loading designations..." />
+            ) : filtered.length === 0 ? (
+              <EmptyRow
+                colSpan={3}
+                label={search ? 'No designations match your search.' : 'No designations yet. Add one to get started.'}
+              />
+            ) : (
+              filtered.map((d) => (
+                <TableRow key={d.id}>
+                  <TableCell className="font-medium">{d.title}</TableCell>
+                  <TableCell>
+                    <span className={CATEGORY_BADGE[d.category]}>
+                      {CATEGORY_LABEL[d.category]}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <RowActions
+                      onEdit={() => openEdit(d)}
+                      onDelete={() => setToDelete(d)}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Create / Edit Dialog */}
+      <Dialog open={mode.type !== 'closed'} onOpenChange={(o) => { if (!o) close(); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{isEdit ? 'Edit Designation' : 'Add Designation'}</DialogTitle>
+            <DialogDescription>
+              {isEdit
+                ? 'Update the title or category of this designation.'
+                : 'Add a new job title designation for your staff.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={submit} className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="desig-title">
+                Title <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="desig-title"
+                value={form.title}
+                onChange={(e) => { setForm((f) => ({ ...f, title: e.target.value })); setTitleError(''); }}
+                placeholder="e.g. Senior Science Teacher"
+                maxLength={100}
+                autoFocus
+                aria-invalid={!!titleError}
+              />
+              {titleError && <p className="text-xs text-destructive">{titleError}</p>}
             </div>
-          ))}
-        </div>
-      )}
 
-      {/* Error */}
-      {isError && (
-        <p className="text-center text-sm text-destructive py-8">
-          Failed to load designations.
-        </p>
-      )}
+            <div className="space-y-1.5">
+              <Label>Category</Label>
+              <SearchableSelect
+                value={form.category}
+                onValueChange={(v) => setForm((f) => ({ ...f, category: v as DesignationCategory }))}
+                options={CATEGORY_OPTIONS}
+                placeholder="Select a category"
+                searchPlaceholder="Search categories..."
+              />
+            </div>
 
-      {/* Empty State */}
-      {!isLoading && !isError && designations?.length === 0 && !showCreateForm && (
-        <div className="flex flex-col items-center gap-3 py-16 rounded-xl border border-dashed text-center">
-          <Briefcase className="w-10 h-10 text-muted-foreground/30" />
-          <p className="font-medium text-muted-foreground">No designations yet</p>
-          <p className="text-sm text-muted-foreground/70">
-            Add your first designation to start inviting staff.
-          </p>
-          <Button variant="outline" onClick={() => setShowCreateForm(true)} className="mt-1">
-            <Plus className="w-4 h-4 mr-2" /> Add Designation
-          </Button>
-        </div>
-      )}
+            <DialogFooter className="pt-2">
+              <Button type="button" variant="ghost" onClick={close} disabled={isPending}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {isEdit ? 'Save Changes' : 'Add Designation'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      {/* Designations Table */}
-      {!isLoading && designations && designations.length > 0 && (
-        <div className="rounded-xl border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/30">
-                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Title</th>
-                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Category</th>
-                <th className="px-4 py-2.5 w-24" />
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {designations.map((designation) => (
-                <tr key={designation.id} className="hover:bg-muted/20 transition-colors">
-                  <td className="px-4 py-3 font-medium">
-                    {editingDesignation?.id === designation.id ? (
-                      <DesignationForm
-                        mode="edit"
-                        designation={designation}
-                        onCancel={() => setEditingDesignation(null)}
-                        onSuccess={() => setEditingDesignation(null)}
-                      />
-                    ) : (
-                      designation.title
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {editingDesignation?.id !== designation.id && (
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          CATEGORY_CONFIG[designation.category].className
-                        }`}
-                      >
-                        {CATEGORY_CONFIG[designation.category].label}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {editingDesignation?.id !== designation.id && (
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={() => setEditingDesignation(designation)}
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete "{designation.title}"?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will permanently delete this designation. Staff members currently assigned to it will need a new designation.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                className="bg-destructive hover:bg-destructive/90"
-                                onClick={() => deleteDesignation.mutate(designation.id)}
-                              >
-                                {deleteDesignation.isPending && (
-                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                )}
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+      {/* Delete Confirm */}
+      <DeleteConfirm
+        open={!!toDelete}
+        onOpenChange={(o) => { if (!o) setToDelete(null); }}
+        entity="Designation"
+        itemName={toDelete?.title}
+        onConfirm={() => {
+          if (toDelete) {
+            deleteMutation.mutate(toDelete.id, { onSuccess: () => setToDelete(null) });
+          }
+        }}
+        isDeleting={deleteMutation.isPending}
+      />
+    </PageContainer>
   );
 }

@@ -47,15 +47,27 @@ export interface StaffUser {
 }
 
 // ─── Staff Member ─────────────────────────────────────────────────────────────
-// IMPORTANT: id is staffProfile.id — NOT user.id
-// Roles are NOT included in GET /staff or GET /staff/:id responses.
-// Staff roles endpoints are NOT YET IMPLEMENTED in the backend.
+// The backend returns a flat StaffProfile entity. There is NO nested `staffProfile` key.
+// Actual shape from GET /staff and GET /staff/:id:
+//   { id, userId, user, designation, designationId, employeeId, department, ... }
+// Roles are NOT included — staff roles endpoints are NOT YET IMPLEMENTED.
 
 export interface StaffMember {
-  id: string; // staffProfile.id
+  id: string;          // staffProfile.id (NOT user.id)
   userId: string;
+  tenantId: string;
   user: StaffUser;
-  staffProfile: StaffProfile;
+  designation: Designation;        // top-level, NOT inside staffProfile
+  designationId: string;
+  employeeId: string | null;
+  department: string | null;
+  joiningDate: string | null;      // 'YYYY-MM-DD'
+  qualification: string | null;
+  subjectSpecialty: string | null;
+  salary: number | null;           // display only — not editable
+  assignments?: TeacherAssignment[]; // only in GET /staff/:id
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ─── Staff Role (for future GET /staff/:id/roles — NOT YET IMPLEMENTED) ──────

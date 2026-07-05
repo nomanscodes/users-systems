@@ -14,17 +14,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useDesignations } from '@/features/staff/hooks/use-designations';
 import { useRoles } from '@/features/rbac/hooks/use-roles';
 import { useInviteStaff } from '@/features/staff/hooks/use-staff';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import type { InviteStaffResponse } from '@/features/staff/types/staff.dto';
+
 
 interface InviteStaffDrawerProps {
   open: boolean;
@@ -234,18 +229,19 @@ export function InviteStaffDrawer({ open, onClose, onSuccess }: InviteStaffDrawe
               ) : (
                 <div className="space-y-1.5">
                   <Label>Designation <span className="text-destructive">*</span></Label>
-                  <Select value={designationId} onValueChange={(v) => { setDesignationId(v); setDesignationError(''); }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a designation" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {designations?.map((d) => (
-                        <SelectItem key={d.id} value={d.id}>
-                          {d.title} · {d.category.charAt(0) + d.category.slice(1).toLowerCase().replace('_', ' ')}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    value={designationId}
+                    onValueChange={(v) => { setDesignationId(v); setDesignationError(''); }}
+                    options={
+                      designations?.map((d) => ({
+                        value: d.id,
+                        label: d.title,
+                        description: d.category === 'TEACHING' ? 'Teaching' : d.category === 'NON_TEACHING' ? 'Non-Teaching' : 'Admin',
+                      })) ?? []
+                    }
+                    placeholder="Select a designation"
+                    searchPlaceholder="Search designations..."
+                  />
                   {designationError && <p className="text-xs text-destructive">{designationError}</p>}
                 </div>
               )}

@@ -27,7 +27,7 @@ interface StaffDetailDrawerProps {
 export function StaffDetailDrawer({ staffId, onClose }: StaffDetailDrawerProps) {
   const { data: staffMember, isLoading } = useStaffMember(staffId);
 
-  const isTeaching = staffMember?.staffProfile.designation.category === 'TEACHING';
+  const isTeaching = staffMember?.designation?.category === 'TEACHING';
 
   return (
     <Sheet open={!!staffId} onOpenChange={(o) => { if (!o) onClose(); }}>
@@ -55,7 +55,7 @@ export function StaffDetailDrawer({ staffId, onClose }: StaffDetailDrawerProps) 
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  {staffMember.staffProfile.designation.title}
+                  {staffMember.designation?.title}
                 </p>
               </div>
             </div>
