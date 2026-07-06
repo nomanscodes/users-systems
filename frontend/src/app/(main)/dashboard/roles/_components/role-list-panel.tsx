@@ -16,22 +16,44 @@ interface RoleListPanelProps {
 
 export function RoleListPanel({ selectedRoleId, onSelect }: RoleListPanelProps) {
   const [createOpen, setCreateOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const { data: roles, isLoading, isError } = useRoles();
+
+  const filtered = roles
+    ? roles.filter((r) => r.name.toLowerCase().includes(query.toLowerCase()))
+    : [];
 
   return (
     <div className="flex flex-col h-full rounded-xl border bg-card overflow-hidden">
       {/* Panel Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
-        <span className="text-sm font-semibold">Roles</span>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-8 gap-1.5 text-xs"
-          onClick={() => setCreateOpen(true)}
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Create Role
-        </Button>
+      <div className="px-3 py-3 border-b shrink-0">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-semibold">Roles</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{roles ? `${roles.length} total` : '—'}</span>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 gap-1.5 text-xs"
+              onClick={() => setCreateOpen(true)}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Create
+            </Button>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="mt-3">
+          <div className="flex items-center gap-2">
+            <input
+              placeholder="Search roles..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full h-9 rounded-md border px-3 text-sm bg-background"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Role List */}
@@ -56,15 +78,15 @@ export function RoleListPanel({ selectedRoleId, onSelect }: RoleListPanelProps) 
           </p>
         )}
 
-        {!isLoading && !isError && roles?.length === 0 && (
+        {!isLoading && !isError && filtered.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-8 px-4 text-center">
             <Shield className="w-8 h-8 text-muted-foreground/30" />
-            <p className="text-xs text-muted-foreground">No roles yet.</p>
-            <p className="text-xs text-muted-foreground/70">Create your first role to get started.</p>
+            <p className="text-xs text-muted-foreground">No roles match.</p>
+            <p className="text-xs text-muted-foreground/70">Try a different search or create a new role.</p>
           </div>
         )}
 
-        {roles?.map((role) => (
+        {filtered.map((role) => (
           <button
             key={role.id}
             onClick={() => onSelect(role.id)}
@@ -78,7 +100,7 @@ export function RoleListPanel({ selectedRoleId, onSelect }: RoleListPanelProps) 
           >
             <div
               className={cn(
-                'flex items-center justify-center w-7 h-7 rounded-md shrink-0 text-xs font-bold',
+                'flex items-center justify-center w-8 h-8 rounded-md shrink-0 text-sm font-semibold',
                 selectedRoleId === role.id
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-muted-foreground',
@@ -87,12 +109,12 @@ export function RoleListPanel({ selectedRoleId, onSelect }: RoleListPanelProps) 
               {role.name.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <span className="text-sm font-medium truncate">{role.name}</span>
                 {role.isSystemRole && (
                   <Badge
                     variant="secondary"
-                    className="text-[10px] px-1.5 py-0 h-4 shrink-0 font-normal"
+                    className="text-[10px] px-1.5 py-0 h-5 shrink-0 font-normal"
                   >
                     System
                   </Badge>
