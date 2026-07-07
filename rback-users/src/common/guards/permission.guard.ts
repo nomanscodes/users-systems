@@ -11,6 +11,7 @@ import {
   PermissionRequirements,
 } from '../decorators/require-permission.decorator';
 import { UserType } from '../enums/user-type.enum';
+import type { JwtPayload } from '../../modules/auth/interface/strategies/jwt.strategy';
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
@@ -31,12 +32,7 @@ export class PermissionGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-
-    const user = request.user as {
-      id: string;
-      tenantId: string;
-      userType: UserType;
-    };
+    const user = request.user as JwtPayload;
 
     if (!user) {
       throw new ForbiddenException('No user found in request');
@@ -49,7 +45,7 @@ export class PermissionGuard implements CanActivate {
 
     // 2. Query the database to verify permission chain
     const hasPermission = await this.checkUserPermission(
-      user.id,
+      user.sub,       // JWT uses `sub` not `id`
       user.tenantId,
       requiredPermission.resource,
       requiredPermission.action,
