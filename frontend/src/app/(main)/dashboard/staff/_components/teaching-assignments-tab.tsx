@@ -1,16 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,7 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Label } from '@/components/ui/label';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useStaffAssignments, useAssignTeacher, useRemoveAssignment } from '@/features/staff/hooks/use-staff-assignments';
 import { useBatches } from '@/features/academics/hooks/use-batches';
 import { useSubjects } from '@/features/academics/hooks/use-subjects';
@@ -51,9 +45,9 @@ export function TeachingAssignmentsTab({ staffId }: TeachingAssignmentsTabProps)
         new Map(
           batches
             .filter((b) => b.classEntity)
-            .map((b) => [b.classId, { id: b.classId, name: b.classEntity!.name }]),
+            .map((b) => [b.classId, { value: b.classId, label: b.classEntity!.name }]),
         ).values(),
-      ).sort((a, b) => a.name.localeCompare(b.name))
+      ).sort((a, b) => a.label.localeCompare(b.label))
     : [];
 
   // Derive group options filtered by selected class
@@ -62,7 +56,7 @@ export function TeachingAssignmentsTab({ staffId }: TeachingAssignmentsTabProps)
         new Map(
           batches
             .filter((b) => b.classId === classId && b.groupId && b.group)
-            .map((b) => [b.groupId!, { id: b.groupId!, name: b.group!.name }]),
+            .map((b) => [b.groupId!, { value: b.groupId!, label: b.group!.name }]),
         ).values(),
       )
     : [];
@@ -79,7 +73,7 @@ export function TeachingAssignmentsTab({ staffId }: TeachingAssignmentsTabProps)
                 b.sectionId &&
                 b.section,
             )
-            .map((b) => [b.sectionId!, { id: b.sectionId!, name: b.section!.name }]),
+            .map((b) => [b.sectionId!, { value: b.sectionId!, label: b.section!.name }]),
         ).values(),
       )
     : [];
@@ -93,6 +87,12 @@ export function TeachingAssignmentsTab({ staffId }: TeachingAssignmentsTabProps)
           (sectionOptions.length === 0 || b.sectionId === (sectionId || null)),
       )?.id
     : undefined;
+
+  const subjectOptions = subjects?.map((s) => ({
+    value: s.id,
+    label: s.name,
+    description: s.code ?? undefined,
+  })) ?? [];
 
   const handleAssign = async () => {
     setAssignError('');
@@ -143,7 +143,7 @@ export function TeachingAssignmentsTab({ staffId }: TeachingAssignmentsTabProps)
             <tbody className="divide-y">
               {assignments.map((a) => (
                 <tr key={a.id} className="hover:bg-muted/20 transition-colors">
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 font-medium">
                     {a.subject.name}
                     {a.subject.code && (
                       <span className="ml-1 text-xs text-muted-foreground">({a.subject.code})</span>
@@ -164,7 +164,7 @@ export function TeachingAssignmentsTab({ staffId }: TeachingAssignmentsTabProps)
                         <AlertDialogHeader>
                           <AlertDialogTitle>Remove assignment?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Remove {a.subject.name} assignment from {a.batch.classEntity?.name}? This cannot be undone.
+                            Remove {a.subject.name} from {a.batch.classEntity?.name}? This cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -185,9 +185,14 @@ export function TeachingAssignmentsTab({ staffId }: TeachingAssignmentsTabProps)
           </table>
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed py-8 text-center">
-          <p className="text-sm text-muted-foreground">No teaching assignments yet.</p>
-        </div>
+        !showForm && (
+          <div className="rounded-lg border border-dashed py-8 text-center">
+            <div className="flex flex-col items-center gap-2">
+              <BookOpen className="w-8 h-8 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">No teaching assignments yet.</p>
+            </div>
+          </div>
+        )
       )}
 
       {/* Assign Form */}
@@ -197,57 +202,49 @@ export function TeachingAssignmentsTab({ staffId }: TeachingAssignmentsTabProps)
 
           <div className="space-y-1.5">
             <Label className="text-xs">Subject</Label>
-            <Select value={subjectId} onValueChange={setSubjectId}>
-              <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select subject" /></SelectTrigger>
-              <SelectContent>
-                {subjects?.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name}{s.code ? ` (${s.code})` : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={subjectId}
+              onValueChange={setSubjectId}
+              options={subjectOptions}
+              placeholder="Select subject"
+              searchPlaceholder="Search subjects..."
+            />
           </div>
 
           <div className="space-y-1.5">
             <Label className="text-xs">Class</Label>
-            <Select value={classId} onValueChange={(v) => { setClassId(v); setGroupId(''); setSectionId(''); }}>
-              <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select class" /></SelectTrigger>
-              <SelectContent>
-                {classOptions.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={classId}
+              onValueChange={(v) => { setClassId(v); setGroupId(''); setSectionId(''); }}
+              options={classOptions}
+              placeholder="Select class"
+              searchPlaceholder="Search classes..."
+            />
           </div>
 
-          {/* Group — only shown if batches have groups for this class */}
           {classId && groupOptions.length > 0 && (
             <div className="space-y-1.5">
               <Label className="text-xs">Group</Label>
-              <Select value={groupId} onValueChange={(v) => { setGroupId(v); setSectionId(''); }}>
-                <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select group" /></SelectTrigger>
-                <SelectContent>
-                  {groupOptions.map((g) => (
-                    <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                value={groupId}
+                onValueChange={(v) => { setGroupId(v); setSectionId(''); }}
+                options={groupOptions}
+                placeholder="Select group"
+                searchPlaceholder="Search groups..."
+              />
             </div>
           )}
 
-          {/* Section — only shown if batches have sections */}
           {classId && sectionOptions.length > 0 && (
             <div className="space-y-1.5">
               <Label className="text-xs">Section</Label>
-              <Select value={sectionId} onValueChange={setSectionId}>
-                <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select section" /></SelectTrigger>
-                <SelectContent>
-                  {sectionOptions.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                value={sectionId}
+                onValueChange={setSectionId}
+                options={sectionOptions}
+                placeholder="Select section"
+                searchPlaceholder="Search sections..."
+              />
             </div>
           )}
 
