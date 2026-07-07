@@ -77,3 +77,10 @@ export class UpdateStaffProfileDto {
   @IsString()
   subjectSpecialty?: string;
 }
+
+export class AssignStaffRoleDto {
+  @IsArray()
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  roleIds: string[];
+}

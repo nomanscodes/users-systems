@@ -18,93 +18,34 @@ export class PermissionsSeederService implements OnApplicationBootstrap {
   }
 
   private async seedPermissions() {
+    // Only permissions that match real @RequirePermission() decorators in controllers.
+    // Do NOT add speculative permissions for modules that don't exist yet.
     const systemPermissions = [
+      // ── academics (AcademicsController) ───────────────────────────
       {
-        resource: 'students',
+        resource: 'academics',
         action: 'read',
-        description: 'Can view student profiles',
+        description: 'Can view academic structure (branches, sessions, classes, groups, sections, subjects, batches, allocations)',
       },
       {
-        resource: 'students',
+        resource: 'academics',
         action: 'write',
-        description: 'Can create or edit student profiles',
+        description: 'Can create, update, and delete academic structure',
       },
-      {
-        resource: 'students',
-        action: 'delete',
-        description: 'Can delete student profiles',
-      },
+
+      // ── staff (StaffController + DesignationsController) ─────────
       {
         resource: 'staff',
         action: 'read',
-        description: 'Can view staff profiles',
+        description: 'Can view staff profiles, designations, roles, and assignments',
       },
       {
         resource: 'staff',
         action: 'write',
-        description: 'Can create or edit staff profiles',
+        description: 'Can invite staff, update profiles, assign roles, manage designations and teaching assignments',
       },
-      { resource: 'fees', action: 'read', description: 'Can view fee records' },
-      {
-        resource: 'fees',
-        action: 'write',
-        description: 'Can create or collect fees',
-      },
-      {
-        resource: 'fees',
-        action: 'delete',
-        description: 'Can delete fee records',
-      },
-      {
-        resource: 'attendance',
-        action: 'read',
-        description: 'Can view attendance records',
-      },
-      {
-        resource: 'attendance',
-        action: 'write',
-        description: 'Can mark attendance',
-      },
-      {
-        resource: 'exams',
-        action: 'read',
-        description: 'Can view exam results',
-      },
-      {
-        resource: 'exams',
-        action: 'write',
-        description: 'Can enter exam marks',
-      },
-      {
-        resource: 'exams',
-        action: 'publish',
-        description: 'Can publish exam results to parents',
-      },
-      {
-        resource: 'reports',
-        action: 'read',
-        description: 'Can view academic and financial reports',
-      },
-      {
-        resource: 'reports',
-        action: 'export',
-        description: 'Can export reports to CSV/PDF',
-      },
-      {
-        resource: 'academics',
-        action: 'read',
-        description: 'Can view academic structure (batches, subjects)',
-      },
-      {
-        resource: 'academics',
-        action: 'write',
-        description: 'Can edit academic structure',
-      },
-      {
-        resource: 'academics',
-        action: 'delete',
-        description: 'Can delete academic structure',
-      },
+
+      // ── roles (RolesController + PermissionsController) ──────────
       {
         resource: 'roles',
         action: 'read',
@@ -113,7 +54,7 @@ export class PermissionsSeederService implements OnApplicationBootstrap {
       {
         resource: 'roles',
         action: 'write',
-        description: 'Can create and assign roles',
+        description: 'Can create, update, and delete roles, and manage role permissions',
       },
     ];
 

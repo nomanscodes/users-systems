@@ -16,6 +16,7 @@ import {
   InviteStaffDto,
   AssignTeacherDto,
   UpdateStaffProfileDto,
+  AssignStaffRoleDto,
 } from '../dto/staff-request.dto';
 import { JwtAuthGuard } from '../../../../common/guards/jwt-auth.guard';
 import { TenantScopeGuard } from '../../../../common/guards/tenant-scope.guard';
@@ -122,6 +123,54 @@ export class StaffController {
     return res
       .status(HttpStatus.OK)
       .json(success(null, 'Staff member deactivated successfully'));
+  }
+
+  // ─── Staff → Roles ─────────────────────────────────────────────────────────
+
+  @Get(':id/roles')
+  @RequirePermission('staff', 'read')
+  async getStaffRoles(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') staffId: string,
+    @Res() res: Response,
+  ) {
+    const data = await this.staffService.getStaffRoles(
+      user.tenantId,
+      staffId,
+    );
+    return res.status(HttpStatus.OK).json(success(data));
+  }
+
+  @Post(':id/roles')
+  @RequirePermission('staff', 'write')
+  async assignStaffRole(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') staffId: string,
+    @Body() dto: AssignStaffRoleDto,
+    @Res() res: Response,
+  ) {
+    const data = await this.staffService.assignStaffRole(
+      user.tenantId,
+      staffId,
+      dto,
+    );
+    return res
+      .status(HttpStatus.CREATED)
+      .json(success(data, 'Role(s) assigned successfully'));
+  }
+
+  @Delete(':id/roles/:roleId')
+  @RequirePermission('staff', 'write')
+  async removeStaffRole(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') staffId: string,
+    @Param('roleId') roleId: string,
+    @Res() res: Response,
+  ) {
+    await this.staffService.removeStaffRole(user.tenantId, staffId, roleId);
+    return res
+      .status(HttpStatus.OK)
+      .json(success(null, 'Role removed successfully'));
   }
 
   @Get(':id/assignments')

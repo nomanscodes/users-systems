@@ -22,6 +22,7 @@ import {
   InviteStaffDto,
   AssignTeacherDto,
   UpdateStaffProfileDto,
+  AssignStaffRoleDto,
 } from '../../interface/dto/staff-request.dto';
 import { UserType } from '../../../../common/enums/user-type.enum';
 import { UserStatus } from '../../../../common/enums/user-status.enum';
@@ -132,6 +133,8 @@ export class StaffService {
         userId,
         staffProfileId,
         email: dto.email,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
         temporaryPassword: tempPassword,
       };
     } catch (error) {
@@ -257,6 +260,86 @@ export class StaffService {
     });
     if (!existing) throw new NotFoundException('Assignment not found');
     await this.assignmentRepo.delete(assignmentId);
+    return true;
+  }
+
+  // ─── Staff → Roles ─────────────────────────────────────────────────────────
+
+  async getStaffRoles(tenantId: string, staffProfileId: string) {
+    const staff = await this.findOne(tenantId, staffProfileId);
+    return this.dataSource
+      .getRepository(UserRoleTypeOrmEntity)
+      .find({
+        where: { userId: staff.userId, tenantId },
+        relations: { role: true },
+      });
+  }
+
+  async assignStaffRole(
+    tenantId: string,
+    staffProfileId: string,
+    dto: AssignStaffRoleDto,
+  ) {
+    const staff = await this.findOne(tenantId, staffProfileId);
+
+    // Validate all role IDs exist in this tenant
+    const rolesCount = await this.dataSource
+      .getRepository(RoleTypeOrmEntity)
+      .count({ where: { id: In(dto.roleIds), tenantId } });
+
+    if (rolesCount !== dto.roleIds.length) {
+      throw new NotFoundException(
+        'One or more roles not found in this tenant',
+      );
+    }
+
+    // Filter out already-assigned roles to avoid duplicate key errors
+    const existing = await this.dataSource
+      .getRepository(UserRoleTypeOrmEntity)
+      .find({
+        where: { userId: staff.userId, tenantId },
+        select: { roleId: true },
+      });
+    const existingRoleIds = new Set(existing.map((ur) => ur.roleId));
+    const newRoleIds = dto.roleIds.filter((id) => !existingRoleIds.has(id));
+
+    if (newRoleIds.length === 0) {
+      return { message: 'All specified roles are already assigned' };
+    }
+
+    const now = new Date();
+    const userRoles = newRoleIds.map((roleId) => ({
+      userId: staff.userId,
+      roleId,
+      tenantId,
+      assignedAt: now,
+    }));
+    await this.dataSource.getRepository(UserRoleTypeOrmEntity).insert(userRoles);
+
+    return { message: 'Role(s) assigned successfully' };
+  }
+
+  async removeStaffRole(
+    tenantId: string,
+    staffProfileId: string,
+    roleId: string,
+  ) {
+    const staff = await this.findOne(tenantId, staffProfileId);
+
+    const existing = await this.dataSource
+      .getRepository(UserRoleTypeOrmEntity)
+      .findOne({
+        where: { userId: staff.userId, roleId, tenantId },
+      });
+
+    if (!existing) {
+      throw new NotFoundException('Role assignment not found');
+    }
+
+    await this.dataSource
+      .getRepository(UserRoleTypeOrmEntity)
+      .delete({ userId: staff.userId, roleId, tenantId });
+
     return true;
   }
 }

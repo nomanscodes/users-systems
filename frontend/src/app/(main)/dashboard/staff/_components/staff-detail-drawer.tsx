@@ -93,7 +93,7 @@ export function StaffDetailDrawer({ staffId, onClose }: StaffDetailDrawerProps) 
                 </TabsContent>
 
                 <TabsContent value="roles" className="mt-0 p-6">
-                  <RolesTab />
+                  <RolesTab staffId={staffMember.id} />
                 </TabsContent>
 
                 {isTeaching && (

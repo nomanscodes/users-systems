@@ -52,17 +52,45 @@ export function ProfileTab({ staffMember }: ProfileTabProps) {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateStaff.mutateAsync({
-      id: staffMember.id,
-      data: {
-        designationId: designationId || undefined,
-        department: department.trim() || undefined,
-        joiningDate: joiningDate || undefined,
-        qualification: qualification.trim() || undefined,
-        subjectSpecialty: subjectSpecialty.trim() || undefined,
-      },
-    });
-    setEditMode(false);
+
+    // Build payload — only include fields that actually changed
+    const payload: Record<string, string | undefined> = {};
+
+    if (designationId !== staffMember.designationId) {
+      payload.designationId = designationId || undefined;
+    }
+    const cleanDept = department.trim() || undefined;
+    if (cleanDept !== (staffMember.department ?? undefined)) {
+      payload.department = cleanDept;
+    }
+    const cleanJoining = joiningDate || undefined;
+    if (cleanJoining !== (staffMember.joiningDate ?? undefined)) {
+      payload.joiningDate = cleanJoining;
+    }
+    const cleanQual = qualification.trim() || undefined;
+    if (cleanQual !== (staffMember.qualification ?? undefined)) {
+      payload.qualification = cleanQual;
+    }
+    const cleanSpecialty = subjectSpecialty.trim() || undefined;
+    if (cleanSpecialty !== (staffMember.subjectSpecialty ?? undefined)) {
+      payload.subjectSpecialty = cleanSpecialty;
+    }
+
+    // Nothing changed — just exit edit mode
+    if (Object.keys(payload).length === 0) {
+      setEditMode(false);
+      return;
+    }
+
+    try {
+      await updateStaff.mutateAsync({
+        id: staffMember.id,
+        data: payload,
+      });
+      setEditMode(false);
+    } catch {
+      // Error toast is handled by useUpdateStaff hook — stay in edit mode
+    }
   };
 
   if (editMode) {
