@@ -159,7 +159,12 @@ export class StaffService {
         user: true,
         designation: true,
         assignments: {
-          batch: true,
+          batch: {
+            classEntity: true,
+            group: true,
+            section: true,
+            session: true,
+          },
           subject: true,
         },
       },
@@ -246,7 +251,15 @@ export class StaffService {
   async getAssignments(tenantId: string, staffProfileId: string) {
     return this.assignmentRepo.find({
       where: { staffProfileId, tenantId },
-      relations: { batch: true, subject: true },
+      relations: {
+        batch: {
+          classEntity: true,
+          group: true,
+          section: true,
+          session: true,
+        },
+        subject: true,
+      },
     });
   }
 
