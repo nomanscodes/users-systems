@@ -134,10 +134,7 @@ export class StaffController {
     @Param('id') staffId: string,
     @Res() res: Response,
   ) {
-    const data = await this.staffService.getStaffRoles(
-      user.tenantId,
-      staffId,
-    );
+    const data = await this.staffService.getStaffRoles(user.tenantId, staffId);
     return res.status(HttpStatus.OK).json(success(data));
   }
 

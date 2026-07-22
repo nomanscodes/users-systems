@@ -45,7 +45,7 @@ export class PermissionGuard implements CanActivate {
 
     // 2. Query the database to verify permission chain
     const hasPermission = await this.checkUserPermission(
-      user.sub,       // JWT uses `sub` not `id`
+      user.sub, // JWT uses `sub` not `id`
       user.tenantId,
       requiredPermission.resource,
       requiredPermission.action,

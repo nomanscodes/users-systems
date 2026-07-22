@@ -25,7 +25,8 @@ export class PermissionsSeederService implements OnApplicationBootstrap {
       {
         resource: 'academics',
         action: 'read',
-        description: 'Can view academic structure (branches, sessions, classes, groups, sections, subjects, batches, allocations)',
+        description:
+          'Can view academic structure (branches, sessions, classes, groups, sections, subjects, batches, allocations)',
       },
       {
         resource: 'academics',
@@ -37,12 +38,14 @@ export class PermissionsSeederService implements OnApplicationBootstrap {
       {
         resource: 'staff',
         action: 'read',
-        description: 'Can view staff profiles, designations, roles, and assignments',
+        description:
+          'Can view staff profiles, designations, roles, and assignments',
       },
       {
         resource: 'staff',
         action: 'write',
-        description: 'Can invite staff, update profiles, assign roles, manage designations and teaching assignments',
+        description:
+          'Can invite staff, update profiles, assign roles, manage designations and teaching assignments',
       },
 
       // ── roles (RolesController + PermissionsController) ──────────
@@ -54,7 +57,8 @@ export class PermissionsSeederService implements OnApplicationBootstrap {
       {
         resource: 'roles',
         action: 'write',
-        description: 'Can create, update, and delete roles, and manage role permissions',
+        description:
+          'Can create, update, and delete roles, and manage role permissions',
       },
     ];
 

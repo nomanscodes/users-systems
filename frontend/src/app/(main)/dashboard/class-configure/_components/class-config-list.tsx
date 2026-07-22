@@ -37,6 +37,7 @@ export function ClassConfigList({
               groups={groups}
               sections={sections}
               onUpdate={(patch) => onUpdateConfig(cls.id, patch)}
+              onRemove={() => {}}
             />
           ))}
         </div>

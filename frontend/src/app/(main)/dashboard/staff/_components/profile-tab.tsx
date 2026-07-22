@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Pencil, Loader2, User, Briefcase, GraduationCap, DollarSign } from 'lucide-react';
+import { Pencil, Loader2, Briefcase, GraduationCap, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useUpdateStaff } from '@/features/staff/hooks/use-staff';
 import { useDesignations } from '@/features/staff/hooks/use-designations';
 import { useAuthStore } from '@/stores/auth.store';
@@ -16,25 +15,24 @@ interface ProfileTabProps {
   staffMember: StaffMember;
 }
 
-function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
+/** Label + value, completely flat — no wrapper border */
+function Field({ label, value }: { label: string; value?: React.ReactNode | null }) {
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">{label}</span>
-      <span className="text-sm">{value || <span className="text-muted-foreground/50 italic">Not set</span>}</span>
+    <div className="space-y-0.5 min-w-0">
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">{label}</p>
+      <p className="text-sm text-foreground break-words">
+        {value || <span className="text-muted-foreground/40 italic text-xs">—</span>}
+      </p>
     </div>
   );
 }
 
-function SectionCard({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
+/** Thin section divider with label — no bg, no card */
+function Section({ label }: { label: string }) {
   return (
-    <div className="rounded-lg border bg-card overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-2.5 border-b bg-muted/30">
-        <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{title}</span>
-      </div>
-      <div className="px-4 py-3">
-        {children}
-      </div>
+    <div className="flex items-center gap-2 pt-1">
+      <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 shrink-0">{label}</span>
+      <div className="flex-1 h-px bg-border" />
     </div>
   );
 }
@@ -49,10 +47,8 @@ export function ProfileTab({ staffMember }: ProfileTabProps) {
 
   const userType = useAuthStore((s) => s.user?.userType);
   const isSchoolAdmin = userType === 'SCHOOL_ADMIN';
-
   const { data: designations } = useDesignations();
   const updateStaff = useUpdateStaff();
-
   const u = staffMember.user;
 
   const startEdit = () => {
@@ -66,7 +62,6 @@ export function ProfileTab({ staffMember }: ProfileTabProps) {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const payload: Record<string, string | undefined> = {};
     if (designationId !== staffMember.designationId) payload.designationId = designationId || undefined;
     const cleanDept = department.trim() || undefined;
@@ -77,92 +72,98 @@ export function ProfileTab({ staffMember }: ProfileTabProps) {
     if (cleanQual !== (staffMember.qualification ?? undefined)) payload.qualification = cleanQual;
     const cleanSpecialty = subjectSpecialty.trim() || undefined;
     if (cleanSpecialty !== (staffMember.subjectSpecialty ?? undefined)) payload.subjectSpecialty = cleanSpecialty;
-
     if (Object.keys(payload).length === 0) { setEditMode(false); return; }
-
     try {
       await updateStaff.mutateAsync({ id: staffMember.id, data: payload });
       setEditMode(false);
-    } catch {
-      // Error toast handled by hook
-    }
+    } catch { /* toast handled by hook */ }
   };
 
+  /* ── EDIT MODE ── */
   if (editMode) {
     return (
-      <form onSubmit={handleSave} className="space-y-4">
-        <SectionCard icon={Briefcase} title="Position">
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Designation</Label>
-              <SearchableSelect
-                value={designationId}
-                onValueChange={setDesignationId}
-                options={designations?.map((d) => ({ value: d.id, label: d.title, description: d.category === 'TEACHING' ? 'Teaching' : d.category === 'NON_TEACHING' ? 'Non-Teaching' : 'Admin' })) ?? []}
-                placeholder="Select designation"
-                searchPlaceholder="Search designations..."
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Department</Label>
-              <Input value={department} onChange={(e) => setDepartment(e.target.value)} maxLength={100} className="h-8 text-sm" />
-            </div>
+      <form onSubmit={handleSave} className="space-y-5">
+        <Section label="Position" />
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Designation</Label>
+            <SearchableSelect
+              value={designationId}
+              onValueChange={setDesignationId}
+              options={designations?.map((d) => ({
+                value: d.id, label: d.title,
+                description: d.category === 'TEACHING' ? 'Teaching' : d.category === 'NON_TEACHING' ? 'Non-Teaching' : 'Admin',
+              })) ?? []}
+              placeholder="Select designation"
+              searchPlaceholder="Search designations..."
+            />
           </div>
-        </SectionCard>
-
-        <SectionCard icon={GraduationCap} title="Professional Details">
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Joining Date</Label>
-              <Input type="date" value={joiningDate} onChange={(e) => setJoiningDate(e.target.value)} className="h-8 text-sm" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Qualification</Label>
-              <Input value={qualification} onChange={(e) => setQualification(e.target.value)} className="h-8 text-sm" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Subject Specialty</Label>
-              <Input value={subjectSpecialty} onChange={(e) => setSubjectSpecialty(e.target.value)} className="h-8 text-sm" />
-            </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Department</Label>
+            <Input value={department} onChange={(e) => setDepartment(e.target.value)} maxLength={100} />
           </div>
-        </SectionCard>
+        </div>
 
-        <div className="flex gap-2 pt-2">
+        <Section label="Professional Details" />
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Joining Date</Label>
+            <Input type="date" value={joiningDate} onChange={(e) => setJoiningDate(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Qualification</Label>
+            <Input value={qualification} onChange={(e) => setQualification(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Subject Specialty</Label>
+            <Input value={subjectSpecialty} onChange={(e) => setSubjectSpecialty(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 pt-2">
           <Button type="submit" size="sm" disabled={updateStaff.isPending}>
             {updateStaff.isPending && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
             Save Changes
           </Button>
-          <Button type="button" size="sm" variant="ghost" onClick={() => setEditMode(false)}>
-            Cancel
-          </Button>
+          <Button type="button" size="sm" variant="ghost" onClick={() => setEditMode(false)}>Cancel</Button>
         </div>
       </form>
     );
   }
 
+  /* ── VIEW MODE ── */
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button size="sm" variant="outline" onClick={startEdit} className="gap-1.5 h-8">
-          <Pencil className="w-3.5 h-3.5" /> Edit Profile
-        </Button>
+      {/* Account — Edit button inline with section header */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 pt-1">
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 shrink-0">Account</span>
+          <div className="flex-1 h-px bg-border" />
+          <Button size="sm" variant="ghost" onClick={startEdit} className="gap-1 h-6 text-xs px-2 text-muted-foreground hover:text-foreground shrink-0">
+            <Pencil className="w-3 h-3" />
+            Edit
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+          <Field label="First Name" value={u.firstName} />
+          <Field label="Last Name" value={u.lastName} />
+          <div className="col-span-2">
+            <Field label="Email" value={u.email} />
+          </div>
+          {u.phone && (
+            <div className="col-span-2">
+              <Field label="Phone" value={u.phone} />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Account Info */}
-      <SectionCard icon={User} title="Account">
+      {/* Position */}
+      <div className="space-y-3">
+        <Section label="Position" />
         <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-          <InfoRow label="First Name" value={u.firstName} />
-          <InfoRow label="Last Name" value={u.lastName} />
-          <InfoRow label="Email" value={<span className="flex items-center gap-1">{u.email}</span>} />
-          <InfoRow label="Phone" value={u.phone ?? null} />
-        </div>
-      </SectionCard>
-
-      {/* Position Info */}
-      <SectionCard icon={Briefcase} title="Position">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-          <InfoRow label="Designation" value={staffMember.designation?.title} />
-          <InfoRow
+          <Field label="Designation" value={staffMember.designation?.title} />
+          <Field
             label="Category"
             value={
               staffMember.designation?.category
@@ -170,39 +171,37 @@ export function ProfileTab({ staffMember }: ProfileTabProps) {
                 : null
             }
           />
-          <InfoRow label="Department" value={staffMember.department} />
-          <InfoRow label="Employee ID" value={staffMember.employeeId} />
+          <Field label="Department" value={staffMember.department} />
+          <Field label="Employee ID" value={staffMember.employeeId} />
         </div>
-      </SectionCard>
+      </div>
 
       {/* Professional Details */}
-      <SectionCard icon={GraduationCap} title="Professional Details">
+      <div className="space-y-3">
+        <Section label="Professional Details" />
         <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-          <InfoRow label="Joining Date" value={staffMember.joiningDate} />
-          <InfoRow label="Qualification" value={staffMember.qualification} />
+          <Field label="Joining Date" value={staffMember.joiningDate} />
+          <Field label="Qualification" value={staffMember.qualification} />
           <div className="col-span-2">
-            <InfoRow label="Subject Specialty" value={staffMember.subjectSpecialty} />
+            <Field label="Subject Specialty" value={staffMember.subjectSpecialty} />
           </div>
         </div>
-      </SectionCard>
+      </div>
 
-      {/* Salary — SCHOOL_ADMIN only */}
+      {/* Compensation — admin only */}
       {isSchoolAdmin && (
-        <SectionCard icon={DollarSign} title="Compensation">
-          <div>
-            <InfoRow
-              label="Salary"
-              value={
-                staffMember.salary != null
-                  ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'BDT' }).format(staffMember.salary)
-                  : null
-              }
-            />
-            <p className="text-[11px] text-muted-foreground/60 mt-2">
-              Salary is read-only. Contact your system admin to modify.
-            </p>
-          </div>
-        </SectionCard>
+        <div className="space-y-3">
+          <Section label="Compensation" />
+          <Field
+            label="Salary"
+            value={
+              staffMember.salary != null
+                ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'BDT' }).format(staffMember.salary)
+                : null
+            }
+          />
+          <p className="text-[11px] text-muted-foreground/40">Salary is read-only. Contact your system admin to modify.</p>
+        </div>
       )}
     </div>
   );

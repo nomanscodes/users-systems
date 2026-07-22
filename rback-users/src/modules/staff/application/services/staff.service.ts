@@ -2,9 +2,10 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository, In } from 'typeorm';
+import { DataSource, Repository, In, IsNull } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { ConfigService } from '@nestjs/config';
@@ -17,6 +18,7 @@ import { UserRoleTypeOrmEntity } from '../../../roles/infrastructure/typeorm/ent
 import { DesignationTypeOrmEntity } from '../../../designations/infrastructure/typeorm/entities/designation.typeorm.entity';
 import { BatchTypeOrmEntity } from '../../../academics/infrastructure/typeorm/entities/batch.typeorm.entity';
 import { SubjectTypeOrmEntity } from '../../../academics/infrastructure/typeorm/entities/subject.typeorm.entity';
+import { SubjectAllocationTypeOrmEntity } from '../../../academics/infrastructure/typeorm/entities/subject-allocation.typeorm.entity';
 
 import {
   InviteStaffDto,
@@ -208,6 +210,31 @@ export class StaffService {
       .findOne({ where: { id: dto.subjectId, tenantId } });
     if (!subject) throw new NotFoundException('Subject not found');
 
+    // ── Subject–Allocation Guard ─────────────────────────────────────────────
+    // A subject must be allocated to the batch's class (and group, if the batch
+    // has one) before a teacher can be assigned to teach it there.
+    // subject_allocations rows: (classId, groupId | null, subjectId)
+    const isAllocated = await this.dataSource
+      .getRepository(SubjectAllocationTypeOrmEntity)
+      .findOne({
+        where: {
+          tenantId,
+          classId: batch.classId,
+          // Group-aware: if the batch has a group, match on it; otherwise match null
+          groupId: batch.groupId ? batch.groupId : IsNull(),
+          subjectId: dto.subjectId,
+        },
+      });
+
+    if (!isAllocated) {
+      throw new BadRequestException(
+        `Subject "${subject.name}" is not allocated to this class${
+          batch.groupId ? ' and group' : ''
+        }. Allocate the subject first in the Subject Allocations module.`,
+      );
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     const existing = await this.assignmentRepo.findOne({
       where: { staffProfileId, batchId: dto.batchId, subjectId: dto.subjectId },
     });
@@ -280,12 +307,10 @@ export class StaffService {
 
   async getStaffRoles(tenantId: string, staffProfileId: string) {
     const staff = await this.findOne(tenantId, staffProfileId);
-    return this.dataSource
-      .getRepository(UserRoleTypeOrmEntity)
-      .find({
-        where: { userId: staff.userId, tenantId },
-        relations: { role: true },
-      });
+    return this.dataSource.getRepository(UserRoleTypeOrmEntity).find({
+      where: { userId: staff.userId, tenantId },
+      relations: { role: true },
+    });
   }
 
   async assignStaffRole(
@@ -301,9 +326,7 @@ export class StaffService {
       .count({ where: { id: In(dto.roleIds), tenantId } });
 
     if (rolesCount !== dto.roleIds.length) {
-      throw new NotFoundException(
-        'One or more roles not found in this tenant',
-      );
+      throw new NotFoundException('One or more roles not found in this tenant');
     }
 
     // Filter out already-assigned roles to avoid duplicate key errors
@@ -327,7 +350,9 @@ export class StaffService {
       tenantId,
       assignedAt: now,
     }));
-    await this.dataSource.getRepository(UserRoleTypeOrmEntity).insert(userRoles);
+    await this.dataSource
+      .getRepository(UserRoleTypeOrmEntity)
+      .insert(userRoles);
 
     return { message: 'Role(s) assigned successfully' };
   }
