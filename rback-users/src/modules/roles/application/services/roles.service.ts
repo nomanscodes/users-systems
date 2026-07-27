@@ -7,12 +7,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RoleTypeOrmEntity } from '../../infrastructure/typeorm/entities/role.typeorm.entity';
-import { RolePermissionTypeOrmEntity } from '../../infrastructure/typeorm/entities/role-permission.typeorm.entity';
-import { PermissionTypeOrmEntity } from '../../../permissions/infrastructure/typeorm/entities/permission.typeorm.entity';
+import { MenuPermissionTypeOrmEntity } from '../../../permissions/infrastructure/typeorm/entities/menu-permission.typeorm.entity';
 import {
   CreateRoleDto,
   UpdateRoleDto,
-  AssignPermissionsDto,
+  AssignMenuPermissionDto,
 } from '../../interface/dto/role.dto';
 
 @Injectable()
@@ -20,10 +19,8 @@ export class RolesService {
   constructor(
     @InjectRepository(RoleTypeOrmEntity)
     private readonly roleRepo: Repository<RoleTypeOrmEntity>,
-    @InjectRepository(RolePermissionTypeOrmEntity)
-    private readonly rolePermissionRepo: Repository<RolePermissionTypeOrmEntity>,
-    @InjectRepository(PermissionTypeOrmEntity)
-    private readonly permissionRepo: Repository<PermissionTypeOrmEntity>,
+    @InjectRepository(MenuPermissionTypeOrmEntity)
+    private readonly menuPermissionRepo: Repository<MenuPermissionTypeOrmEntity>,
   ) {}
 
   async createRole(tenantId: string, dto: CreateRoleDto) {
@@ -51,7 +48,7 @@ export class RolesService {
   async getRole(tenantId: string, roleId: string) {
     const role = await this.roleRepo.findOne({
       where: { id: roleId, tenantId },
-      relations: { rolePermissions: { permission: true } },
+      relations: { menuPermissions: { menu: true } },
     });
     if (!role) throw new NotFoundException('Role not found');
     return role;
@@ -87,48 +84,39 @@ export class RolesService {
     await this.roleRepo.remove(role);
   }
 
-  async assignPermissions(
+  async assignMenuPermission(
     tenantId: string,
     roleId: string,
-    dto: AssignPermissionsDto,
+    dto: AssignMenuPermissionDto,
   ) {
     const role = await this.getRole(tenantId, roleId);
 
-    // We allow adding permissions to system roles for tenant flexibility,
-    // but the system default permissions are seeded.
-
-    const newLinks = dto.permissionIds.map((permId) =>
-      this.rolePermissionRepo.create({ roleId: role.id, permissionId: permId }),
-    );
-
-    // Using save will throw if unique constraint fails, but since it's a primary composite key
-    // we can use upsert or delete-insert. Let's do save with ignore (MySQL IGNORE or try-catch).
-    // Or simpler: filter out existing
-    const existing = await this.rolePermissionRepo.find({
-      where: { roleId: role.id },
+    let permission = await this.menuPermissionRepo.findOne({
+      where: { roleId: role.id, menuId: dto.menuId },
     });
-    const existingIds = existing.map((e) => e.permissionId);
 
-    const toInsert = newLinks.filter(
-      (l) => !existingIds.includes(l.permissionId),
-    );
-    if (toInsert.length > 0) {
-      await this.rolePermissionRepo.save(toInsert);
+    if (permission) {
+      permission.canView = dto.canView;
+      permission.canCreate = dto.canCreate;
+      permission.canEdit = dto.canEdit;
+      permission.canDelete = dto.canDelete;
+    } else {
+      permission = this.menuPermissionRepo.create({
+        roleId: role.id,
+        menuId: dto.menuId,
+        canView: dto.canView,
+        canCreate: dto.canCreate,
+        canEdit: dto.canEdit,
+        canDelete: dto.canDelete,
+      });
     }
 
+    await this.menuPermissionRepo.save(permission);
     return this.getRole(tenantId, roleId);
   }
 
-  async removePermission(
-    tenantId: string,
-    roleId: string,
-    permissionId: string,
-  ) {
+  async removeMenuPermission(tenantId: string, roleId: string, menuId: string) {
     const role = await this.getRole(tenantId, roleId);
-    await this.rolePermissionRepo.delete({ roleId: role.id, permissionId });
-  }
-
-  async getAllPermissions() {
-    return this.permissionRepo.find();
+    await this.menuPermissionRepo.delete({ roleId: role.id, menuId });
   }
 }

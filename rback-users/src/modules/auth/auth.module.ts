@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 // Entities
 import { UserTypeOrmEntity } from '../users/infrastructure/typeorm/user.typeorm.entity';
@@ -43,6 +44,7 @@ import { AuthController } from './interface/http/auth.controller';
       TenantTypeOrmEntity,
       RefreshTokenTypeOrmEntity,
     ]),
+    PermissionsModule,
   ],
   controllers: [AuthController],
   providers: [

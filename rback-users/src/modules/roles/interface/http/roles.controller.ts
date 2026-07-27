@@ -12,12 +12,12 @@ import { RolesService } from '../../application/services/roles.service';
 import {
   CreateRoleDto,
   UpdateRoleDto,
-  AssignPermissionsDto,
+  AssignMenuPermissionDto,
 } from '../dto/role.dto';
 import { JwtAuthGuard } from '../../../../common/guards/jwt-auth.guard';
 import { TenantScopeGuard } from '../../../../common/guards/tenant-scope.guard';
 import { PermissionGuard } from '../../../../common/guards/permission.guard';
-import { RequirePermission } from '../../../../common/decorators/require-permission.decorator';
+import { RequireAction } from '../../../../common/decorators/require-action.decorator';
 import { CurrentUser } from '../../../../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../../../auth/interface/strategies/jwt.strategy';
 
@@ -27,7 +27,7 @@ export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Post()
-  @RequirePermission('roles', 'write')
+  @RequireAction('roles', 'write')
   async createRole(
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateRoleDto,
@@ -36,19 +36,19 @@ export class RolesController {
   }
 
   @Get()
-  @RequirePermission('roles', 'read')
+  @RequireAction('roles', 'read')
   async getRoles(@CurrentUser() user: JwtPayload) {
     return this.rolesService.getRoles(user.tenantId);
   }
 
   @Get(':id')
-  @RequirePermission('roles', 'read')
+  @RequireAction('roles', 'read')
   async getRole(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     return this.rolesService.getRole(user.tenantId, id);
   }
 
   @Patch(':id')
-  @RequirePermission('roles', 'write')
+  @RequireAction('roles', 'write')
   async updateRole(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
@@ -58,42 +58,45 @@ export class RolesController {
   }
 
   @Delete(':id')
-  @RequirePermission('roles', 'write')
+  @RequireAction('roles', 'write')
   async deleteRole(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     await this.rolesService.deleteRole(user.tenantId, id);
     return { success: true };
   }
 
   @Post(':id/permissions')
-  @RequirePermission('roles', 'write')
+  @RequireAction('roles', 'write')
   async assignPermissions(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
-    @Body() dto: AssignPermissionsDto,
+    @Body() dto: AssignMenuPermissionDto,
   ) {
-    return this.rolesService.assignPermissions(user.tenantId, id, dto);
+    return this.rolesService.assignMenuPermission(user.tenantId, id, dto);
   }
 
-  @Delete(':id/permissions/:permissionId')
-  @RequirePermission('roles', 'write')
+  @Delete(':id/permissions/:menuId')
+  @RequireAction('roles', 'write')
   async removePermission(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
-    @Param('permissionId') permId: string,
+    @Param('menuId') menuId: string,
   ) {
-    await this.rolesService.removePermission(user.tenantId, id, permId);
+    await this.rolesService.removeMenuPermission(user.tenantId, id, menuId);
     return { success: true };
   }
 }
 
+// Deprecated PermissionsController since getAllPermissions is no longer used for the old table
+/*
 @Controller('permissions')
 @UseGuards(JwtAuthGuard, TenantScopeGuard, PermissionGuard)
 export class PermissionsController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Get()
-  @RequirePermission('roles', 'read')
+  @RequireAction('roles', 'read')
   async getAllPermissions() {
     return this.rolesService.getAllPermissions();
   }
 }
+*/

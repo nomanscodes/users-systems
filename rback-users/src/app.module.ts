@@ -10,6 +10,7 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { DesignationsModule } from './modules/designations/designations.module';
 import { StaffModule } from './modules/staff/staff.module';
+import { SuperAdminModule } from './modules/super-admin/super-admin.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { StaffModule } from './modules/staff/staff.module';
     RolesModule,
     DesignationsModule,
     StaffModule,
+    SuperAdminModule,
   ],
 })
 export class AppModule {}

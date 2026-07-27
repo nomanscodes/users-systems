@@ -15,7 +15,7 @@ import { AcademicsService } from '../../application/services/academics.service';
 import { JwtAuthGuard } from '../../../../common/guards/jwt-auth.guard';
 import { TenantScopeGuard } from '../../../../common/guards/tenant-scope.guard';
 import { PermissionGuard } from '../../../../common/guards/permission.guard';
-import { RequirePermission } from '../../../../common/decorators/require-permission.decorator';
+import { RequireAction } from '../../../../common/decorators/require-action.decorator';
 import { CurrentUser } from '../../../../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../../../auth/interface/strategies/jwt.strategy';
 import { success } from '../../../../common/response/api-response';
@@ -57,7 +57,7 @@ export class AcademicsController {
   // BRANCHES
   // ─────────────────────────────────────────────────────────────────────
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Post('branches')
   async createBranch(
     @CurrentUser() user: JwtPayload,
@@ -67,14 +67,14 @@ export class AcademicsController {
     return success(data, 'Branch created successfully.');
   }
 
-  @RequirePermission('academics', 'read')
+  @RequireAction('academics', 'read')
   @Get('branches')
   async getBranches(@CurrentUser() user: JwtPayload) {
     const data = await this.academicsService.getBranches(user.tenantId);
     return success(data);
   }
 
-  @RequirePermission('academics', 'read')
+  @RequireAction('academics', 'read')
   @Get('branches/:id')
   async getBranchById(
     @Param('id') id: string,
@@ -84,7 +84,7 @@ export class AcademicsController {
     return success(data);
   }
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Patch('branches/:id')
   async updateBranch(
     @Param('id') id: string,
@@ -99,7 +99,7 @@ export class AcademicsController {
     return success(data, 'Branch updated successfully.');
   }
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Delete('branches/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteBranch(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
@@ -110,7 +110,7 @@ export class AcademicsController {
   // SESSIONS
   // ─────────────────────────────────────────────────────────────────────
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Post('sessions')
   async createSession(
     @CurrentUser() user: JwtPayload,
@@ -120,14 +120,14 @@ export class AcademicsController {
     return success(data, 'Session created successfully.');
   }
 
-  @RequirePermission('academics', 'read')
+  @RequireAction('academics', 'read')
   @Get('sessions')
   async getSessions(@CurrentUser() user: JwtPayload) {
     const data = await this.academicsService.getSessions(user.tenantId);
     return success(data);
   }
 
-  @RequirePermission('academics', 'read')
+  @RequireAction('academics', 'read')
   @Get('sessions/:id')
   async getSessionById(
     @Param('id') id: string,
@@ -137,7 +137,7 @@ export class AcademicsController {
     return success(data);
   }
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Patch('sessions/:id')
   async updateSession(
     @Param('id') id: string,
@@ -152,7 +152,7 @@ export class AcademicsController {
     return success(data, 'Session updated successfully.');
   }
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Delete('sessions/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteSession(
@@ -166,7 +166,7 @@ export class AcademicsController {
   // CLASSES
   // ─────────────────────────────────────────────────────────────────────
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Post('classes')
   async createClass(
     @CurrentUser() user: JwtPayload,
@@ -176,21 +176,21 @@ export class AcademicsController {
     return success(data, 'Class created successfully.');
   }
 
-  @RequirePermission('academics', 'read')
+  @RequireAction('academics', 'read')
   @Get('classes')
   async getClasses(@CurrentUser() user: JwtPayload) {
     const data = await this.academicsService.getClasses(user.tenantId);
     return success(data);
   }
 
-  @RequirePermission('academics', 'read')
+  @RequireAction('academics', 'read')
   @Get('classes/:id')
   async getClassById(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     const data = await this.academicsService.getClassById(id, user.tenantId);
     return success(data);
   }
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Patch('classes/:id')
   async updateClass(
     @Param('id') id: string,
@@ -205,7 +205,7 @@ export class AcademicsController {
     return success(data, 'Class updated successfully.');
   }
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Delete('classes/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteClass(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
@@ -216,7 +216,7 @@ export class AcademicsController {
   // GROUPS
   // ─────────────────────────────────────────────────────────────────────
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Post('groups')
   async createGroup(
     @CurrentUser() user: JwtPayload,
@@ -226,21 +226,21 @@ export class AcademicsController {
     return success(data, 'Group created successfully.');
   }
 
-  @RequirePermission('academics', 'read')
+  @RequireAction('academics', 'read')
   @Get('groups')
   async getGroups(@CurrentUser() user: JwtPayload) {
     const data = await this.academicsService.getGroups(user.tenantId);
     return success(data);
   }
 
-  @RequirePermission('academics', 'read')
+  @RequireAction('academics', 'read')
   @Get('groups/:id')
   async getGroupById(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     const data = await this.academicsService.getGroupById(id, user.tenantId);
     return success(data);
   }
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Patch('groups/:id')
   async updateGroup(
     @Param('id') id: string,
@@ -255,7 +255,7 @@ export class AcademicsController {
     return success(data, 'Group updated successfully.');
   }
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Delete('groups/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteGroup(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
@@ -266,7 +266,7 @@ export class AcademicsController {
   // SECTIONS
   // ─────────────────────────────────────────────────────────────────────
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Post('sections')
   async createSection(
     @CurrentUser() user: JwtPayload,
@@ -276,14 +276,14 @@ export class AcademicsController {
     return success(data, 'Section created successfully.');
   }
 
-  @RequirePermission('academics', 'read')
+  @RequireAction('academics', 'read')
   @Get('sections')
   async getSections(@CurrentUser() user: JwtPayload) {
     const data = await this.academicsService.getSections(user.tenantId);
     return success(data);
   }
 
-  @RequirePermission('academics', 'read')
+  @RequireAction('academics', 'read')
   @Get('sections/:id')
   async getSectionById(
     @Param('id') id: string,
@@ -293,7 +293,7 @@ export class AcademicsController {
     return success(data);
   }
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Patch('sections/:id')
   async updateSection(
     @Param('id') id: string,
@@ -308,7 +308,7 @@ export class AcademicsController {
     return success(data, 'Section updated successfully.');
   }
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Delete('sections/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteSection(
@@ -322,7 +322,7 @@ export class AcademicsController {
   // SUBJECTS
   // ─────────────────────────────────────────────────────────────────────
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Post('subjects')
   async createSubject(
     @CurrentUser() user: JwtPayload,
@@ -332,14 +332,14 @@ export class AcademicsController {
     return success(data, 'Subject created successfully.');
   }
 
-  @RequirePermission('academics', 'read')
+  @RequireAction('academics', 'read')
   @Get('subjects')
   async getSubjects(@CurrentUser() user: JwtPayload) {
     const data = await this.academicsService.getSubjects(user.tenantId);
     return success(data);
   }
 
-  @RequirePermission('academics', 'read')
+  @RequireAction('academics', 'read')
   @Get('subjects/:id')
   async getSubjectById(
     @Param('id') id: string,
@@ -349,7 +349,7 @@ export class AcademicsController {
     return success(data);
   }
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Patch('subjects/:id')
   async updateSubject(
     @Param('id') id: string,
@@ -364,7 +364,7 @@ export class AcademicsController {
     return success(data, 'Subject updated successfully.');
   }
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Delete('subjects/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteSubject(
@@ -378,7 +378,7 @@ export class AcademicsController {
   // BATCHES (Classrooms)
   // ─────────────────────────────────────────────────────────────────────
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Post('batches')
   async createBatches(
     @CurrentUser() user: JwtPayload,
@@ -388,7 +388,7 @@ export class AcademicsController {
     return success(data, `${dtos.length} classroom(s) created successfully.`);
   }
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Post('batches/sync')
   async syncBatches(
     @CurrentUser() user: JwtPayload,
@@ -398,7 +398,7 @@ export class AcademicsController {
     return success(data, `Classrooms synchronized successfully.`);
   }
 
-  @RequirePermission('academics', 'read')
+  @RequireAction('academics', 'read')
   @Get('batches')
   async getBatches(@CurrentUser() user: JwtPayload) {
     const data = await this.academicsService.getBatches(user.tenantId);
@@ -415,7 +415,7 @@ export class AcademicsController {
    * IMPORTANT: This route MUST be declared before GET /batches/:id
    * so that NestJS does not treat the literal string 'resolve' as an :id.
    */
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Post('batches/resolve')
   async resolveBatch(
     @CurrentUser() user: JwtPayload,
@@ -425,14 +425,14 @@ export class AcademicsController {
     return success(data);
   }
 
-  @RequirePermission('academics', 'read')
+  @RequireAction('academics', 'read')
   @Get('batches/:id')
   async getBatchById(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     const data = await this.academicsService.getBatchById(id, user.tenantId);
     return success(data);
   }
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Delete('batches/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteBatch(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
@@ -443,7 +443,7 @@ export class AcademicsController {
   // SUBJECT ALLOCATIONS
   // ─────────────────────────────────────────────────────────────────────
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Post('subject-allocations')
   async createSubjectAllocation(
     @CurrentUser() user: JwtPayload,
@@ -456,7 +456,7 @@ export class AcademicsController {
     return success(data, 'Subject allocated successfully.');
   }
 
-  @RequirePermission('academics', 'read')
+  @RequireAction('academics', 'read')
   @Get('subject-allocations')
   async getSubjectAllocations(@CurrentUser() user: JwtPayload) {
     const data = await this.academicsService.getSubjectAllocations(
@@ -465,7 +465,7 @@ export class AcademicsController {
     return success(data);
   }
 
-  @RequirePermission('academics', 'write')
+  @RequireAction('academics', 'write')
   @Delete('subject-allocations/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteSubjectAllocation(

@@ -7,7 +7,7 @@ import {
   Index,
   OneToMany,
 } from 'typeorm';
-import { RolePermissionTypeOrmEntity } from './role-permission.typeorm.entity';
+import { MenuPermissionTypeOrmEntity } from '../../../../permissions/infrastructure/typeorm/entities/menu-permission.typeorm.entity';
 import { UserRoleTypeOrmEntity } from './user-role.typeorm.entity';
 
 @Entity('roles')
@@ -34,8 +34,8 @@ export class RoleTypeOrmEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => RolePermissionTypeOrmEntity, (rp) => rp.role)
-  rolePermissions: RolePermissionTypeOrmEntity[];
+  @OneToMany(() => MenuPermissionTypeOrmEntity, (mp) => mp.roleId)
+  menuPermissions: MenuPermissionTypeOrmEntity[];
 
   @OneToMany(() => UserRoleTypeOrmEntity, (ur) => ur.role)
   userRoles: UserRoleTypeOrmEntity[];

@@ -23,7 +23,7 @@ import { TenantScopeGuard } from '../../../../common/guards/tenant-scope.guard';
 import { PermissionGuard } from '../../../../common/guards/permission.guard';
 import { CurrentUser } from '../../../../common/decorators/current-user.decorator';
 import { JwtPayload } from '../../../auth/interface/strategies/jwt.strategy';
-import { RequirePermission } from '../../../../common/decorators/require-permission.decorator';
+import { RequireAction } from '../../../../common/decorators/require-action.decorator';
 import { success } from '../../../../common/response/api-response';
 
 @Controller('staff')
@@ -32,7 +32,7 @@ export class StaffController {
   constructor(private readonly staffService: StaffService) {}
 
   @Post('invite')
-  @RequirePermission('staff', 'write')
+  @RequireAction('staff', 'write')
   async inviteStaff(
     @CurrentUser() user: JwtPayload,
     @Body() dto: InviteStaffDto,
@@ -49,14 +49,14 @@ export class StaffController {
   }
 
   @Get()
-  @RequirePermission('staff', 'read')
+  @RequireAction('staff', 'read')
   async findAll(@CurrentUser() user: JwtPayload, @Res() res: Response) {
     const data = await this.staffService.findAll(user.tenantId);
     return res.status(HttpStatus.OK).json(success(data));
   }
 
   @Get(':id')
-  @RequirePermission('staff', 'read')
+  @RequireAction('staff', 'read')
   async findOne(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
@@ -67,7 +67,7 @@ export class StaffController {
   }
 
   @Patch(':id')
-  @RequirePermission('staff', 'write')
+  @RequireAction('staff', 'write')
   async update(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
@@ -81,7 +81,7 @@ export class StaffController {
   }
 
   @Post(':id/assignments')
-  @RequirePermission('staff', 'write')
+  @RequireAction('staff', 'write')
   async assignTeacher(
     @CurrentUser() user: JwtPayload,
     @Param('id') staffId: string,
@@ -99,7 +99,7 @@ export class StaffController {
   }
 
   @Get('batches/:batchId/teachers')
-  @RequirePermission('staff', 'read')
+  @RequireAction('staff', 'read')
   async getTeachersByBatch(
     @CurrentUser() user: JwtPayload,
     @Param('batchId') batchId: string,
@@ -113,7 +113,7 @@ export class StaffController {
   }
 
   @Delete(':id')
-  @RequirePermission('staff', 'write')
+  @RequireAction('staff', 'write')
   async deactivate(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
@@ -128,7 +128,7 @@ export class StaffController {
   // ─── Staff → Roles ─────────────────────────────────────────────────────────
 
   @Get(':id/roles')
-  @RequirePermission('staff', 'read')
+  @RequireAction('staff', 'read')
   async getStaffRoles(
     @CurrentUser() user: JwtPayload,
     @Param('id') staffId: string,
@@ -139,7 +139,7 @@ export class StaffController {
   }
 
   @Post(':id/roles')
-  @RequirePermission('staff', 'write')
+  @RequireAction('staff', 'write')
   async assignStaffRole(
     @CurrentUser() user: JwtPayload,
     @Param('id') staffId: string,
@@ -157,7 +157,7 @@ export class StaffController {
   }
 
   @Delete(':id/roles/:roleId')
-  @RequirePermission('staff', 'write')
+  @RequireAction('staff', 'write')
   async removeStaffRole(
     @CurrentUser() user: JwtPayload,
     @Param('id') staffId: string,
@@ -171,7 +171,7 @@ export class StaffController {
   }
 
   @Get(':id/assignments')
-  @RequirePermission('staff', 'read')
+  @RequireAction('staff', 'read')
   async getAssignments(
     @CurrentUser() user: JwtPayload,
     @Param('id') staffId: string,
@@ -182,7 +182,7 @@ export class StaffController {
   }
 
   @Delete(':id/assignments/:assignmentId')
-  @RequirePermission('staff', 'write')
+  @RequireAction('staff', 'write')
   async removeAssignment(
     @CurrentUser() user: JwtPayload,
     @Param('id') staffId: string,

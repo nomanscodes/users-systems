@@ -9,7 +9,7 @@ import {
   UseFilters,
   UseGuards,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { LoginUseCase } from '../../application/use-cases/login.use-case';
 import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token.use-case';
 import { LogoutUseCase } from '../../application/use-cases/logout.use-case';
@@ -21,6 +21,8 @@ import { JwtAuthGuard } from '../../../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../strategies/jwt.strategy';
 import { success } from '../../../../common/response/api-response';
+import { MenuService } from '../../../../modules/permissions/application/services/menu.service';
+import { UserType } from '../../../../common/enums/user-type.enum';
 
 @Controller('auth')
 @UseFilters(AuthDomainErrorFilter)
@@ -30,6 +32,7 @@ export class AuthController {
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
     private readonly logoutUseCase: LogoutUseCase,
     private readonly meUseCase: MeUseCase,
+    private readonly menuService: MenuService,
   ) {}
 
   /**
@@ -80,5 +83,30 @@ export class AuthController {
   async me(@CurrentUser() user: JwtPayload, @Res() res: Response) {
     const data = await this.meUseCase.execute(user.sub);
     return res.status(HttpStatus.OK).json(success(data));
+  }
+
+  /**
+   * GET /auth/me/menus
+   * JWT required — returns the current user's permitted menus
+   */
+  @Get('me/menus')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  async getMyMenus(@CurrentUser() user: JwtPayload, @Res() res: Response) {
+    let menus = [];
+    if (user.userType === UserType.SUPER_ADMIN) {
+      menus = await this.menuService.getSuperAdminMenus();
+    } else if (user.userType === UserType.STUDENT) {
+      menus = await this.menuService.getStudentMenus(user.tenantId);
+    } else if (user.userType === UserType.PARENT) {
+      menus = await this.menuService.getParentMenus(user.tenantId);
+    } else if (
+      user.userType === UserType.STAFF ||
+      user.userType === UserType.SCHOOL_ADMIN
+    ) {
+      menus = await this.menuService.getStaffMenus(user.sub, user.tenantId);
+    }
+
+    return res.status(HttpStatus.OK).json(success(menus));
   }
 }

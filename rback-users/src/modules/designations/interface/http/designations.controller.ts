@@ -21,7 +21,7 @@ import { TenantScopeGuard } from '../../../../common/guards/tenant-scope.guard';
 import { PermissionGuard } from '../../../../common/guards/permission.guard';
 import { CurrentUser } from '../../../../common/decorators/current-user.decorator';
 import { JwtPayload } from '../../../auth/interface/strategies/jwt.strategy';
-import { RequirePermission } from '../../../../common/decorators/require-permission.decorator';
+import { RequireAction } from '../../../../common/decorators/require-action.decorator';
 import { success } from '../../../../common/response/api-response';
 
 @Controller('designations')
@@ -30,7 +30,7 @@ export class DesignationsController {
   constructor(private readonly designationsService: DesignationsService) {}
 
   @Post()
-  @RequirePermission('staff', 'write')
+  @RequireAction('staff', 'write')
   async create(
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateDesignationDto,
@@ -43,14 +43,14 @@ export class DesignationsController {
   }
 
   @Get()
-  @RequirePermission('staff', 'read')
+  @RequireAction('staff', 'read')
   async findAll(@CurrentUser() user: JwtPayload, @Res() res: Response) {
     const data = await this.designationsService.findAll(user.tenantId);
     return res.status(HttpStatus.OK).json(success(data));
   }
 
   @Patch(':id')
-  @RequirePermission('staff', 'write')
+  @RequireAction('staff', 'write')
   async update(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
@@ -64,7 +64,7 @@ export class DesignationsController {
   }
 
   @Delete(':id')
-  @RequirePermission('staff', 'write')
+  @RequireAction('staff', 'write')
   async delete(
     @CurrentUser() user: JwtPayload,
     @Param('id') id: string,

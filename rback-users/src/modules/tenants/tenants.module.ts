@@ -12,12 +12,16 @@ import { FindAllTenantsQuery } from './application/use-cases/find-all-tenants.qu
 import { FindTenantByIdQuery } from './application/use-cases/find-tenant-by-id.query';
 import { UpdateTenantStatusUseCase } from './application/use-cases/update-tenant-status.use-case';
 import { UpdateTenantUseCase } from './application/use-cases/update-tenant.use-case';
-
+import { PermissionsModule } from '../permissions/permissions.module';
 import { TenantController } from './interface/http/tenant.controller';
+import { TenantAdminController } from './interface/http/tenant-admin.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TenantTypeOrmEntity, UserTypeOrmEntity])],
-  controllers: [TenantController],
+  imports: [
+    TypeOrmModule.forFeature([TenantTypeOrmEntity, UserTypeOrmEntity]),
+    PermissionsModule,
+  ],
+  controllers: [TenantController, TenantAdminController],
   providers: [
     // ── Repository binding (port → implementation) ──
     {

@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsArray,
   IsUUID,
+  IsBoolean,
 } from 'class-validator';
 
 export class CreateRoleDto {
@@ -30,4 +31,21 @@ export class AssignPermissionsDto {
   @IsArray()
   @IsUUID('4', { each: true })
   permissionIds: string[];
+}
+
+export class AssignMenuPermissionDto {
+  @IsUUID()
+  menuId: string;
+
+  @IsBoolean()
+  canView: boolean;
+
+  @IsBoolean()
+  canCreate: boolean;
+
+  @IsBoolean()
+  canEdit: boolean;
+
+  @IsBoolean()
+  canDelete: boolean;
 }
